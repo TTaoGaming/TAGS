@@ -1,0 +1,45 @@
+{
+  "name": "tags-mvp-modular-monolith",
+  "version": "25.6.26.1055",
+  "description": "Event-Driven Musical Hand Tracking System - Migration to Pure Event Architecture",
+  "main": "index-modular-monolith.html",
+  "scripts": {
+    "lint": "eslint index-modular-monolith.html --config .eslintrc.js",
+    "lint:fix": "eslint index-modular-monolith.html --config .eslintrc.js --fix",
+    "migration:check": "eslint index-modular-monolith.html --config .eslintrc.js --format=compact",
+    "migration:phase1": "echo 'Phase 1: Event bridges implemented - test with testEventMigration()'",
+    "migration:phase2": "echo 'Phase 2: Migrate modules one by one - see MIGRATION-GUIDE.md'",
+    "migration:phase3": "echo 'Phase 3: Remove global dependencies - final cleanup'",
+    "test:bridges": "echo 'Open app and run: testEventMigration()'"
+  },
+  "keywords": [
+    "event-driven",
+    "hand-tracking",
+    "midi",
+    "audio",
+    "modular-monolith",
+    "dependency-injection"
+  ],
+  "author": "Tommy",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.0.0"
+  },
+  "eslintConfig": {
+    "extends": ["./.eslintrc.js"]
+  },
+  "repository": {
+    "type": "git",
+    "url": "local"
+  },
+  "migration": {
+    "phase": 1,
+    "status": "bridges-implemented",
+    "nextSteps": [
+      "Run testEventMigration() to verify bridges",
+      "Migrate MIDI mapping module to events",
+      "Migrate UI update functions to events",
+      "Enable Phase 2 ESLint rules"
+    ]
+  }
+} 

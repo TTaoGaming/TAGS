@@ -1,0 +1,1075 @@
+// 🎯 PINCH EVENT ZONE DEBUGGING DIAGNOSTIC - FIXED
+// Copy-paste this into your browser console after starting the app via FAB
+
+console.log("🔍 ZONE DEBUG: Starting pinch event diagnostic...");
+
+// Find all objects with emitPinchEvent methods
+function findPinchObjects() {
+  const found = [];
+  
+  // Check global precision pinch objects
+  if (window.precisionPinchModule && typeof window.precisionPinchModule.emitPinchEvent === 'function') {
+    found.push({ name: 'precisionPinchModule', obj: window.precisionPinchModule });
+  }
+  
+  // Check for any precision pinch instances
+  Object.keys(window).forEach(key => {
+    try {
+      if (window[key] && typeof window[key].emitPinchEvent === 'function') {
+        found.push({ name: key, obj: window[key] });
+      }
+    } catch (e) {
+      // Skip inaccessible properties
+    }
+  });
+  
+  return found;
+}
+
+const pinchObjects = findPinchObjects();
+console.log("🔍 Found pinch objects:", pinchObjects.map(p => p.name));
+
+// Override each emitPinchEvent with debugging
+pinchObjects.forEach((item, index) => {
+  const originalEmit = item.obj.emitPinchEvent.bind(item.obj);
+  
+  item.obj.emitPinchEvent = function(eventType, data) {
+    console.log(`🚨 PINCH DEBUG [${item.name}]:`, eventType);
+    console.log(`🚨 DATA:`, data);
+    
+    // Check coordinates
+    if (data.coordinates) {
+      console.log(`🚨 COORDINATES:`, data.coordinates);
+      if (data.coordinates.finger) {
+        console.log(`🚨 FINGER COORDS:`, data.coordinates.finger);
+        console.log(`🚨 FINGER X:`, data.coordinates.finger.x);
+        
+        // ✅ FIXED: Remove incorrect coordinate inversion
+        const pinchX = data.coordinates.finger.x;  // ✅ NO INVERSION NEEDED
+        const zone = pinchX < 0.5 ? 1 : 2;
+        const zoneName = pinchX < 0.5 ? 'Zone 1 (Left)' : 'Zone 2 (Right)';
+        console.log(`🎯 ZONE CALCULATION: ${zoneName} at x=${pinchX.toFixed(3)}`);
+      } else {
+        console.log(`❌ NO FINGER COORDINATES`);
+      }
+    } else {
+      console.log(`❌ NO COORDINATES OBJECT`);
+    }
+    
+    // Call original function
+    return originalEmit(eventType, data);
+  };
+});
+
+console.log("🔍 ZONE DEBUG: Diagnostic installed! Now try pinching to see debug output.");
+
+// ✅ ZONE-BASED PIANO GENIE BRIDGE REPLACEMENT
+// This replaces the current hand-based bridge with zone-based mapping
+
+/**
+ * Create zone-enhanced Piano Genie bridge that uses spatial zones instead of hand detection
+ */
+window.createZoneBasedPianoGenieBridge = function() {
+  console.log('🔧 CREATING ZONE-BASED PIANO GENIE BRIDGE...');
+  
+  // Cleanup existing bridge first
+  if (window.pianoGenieEventBridge && window.gcFreeOrchestrator) {
+    window.gcFreeOrchestrator.off('pinchState', window.pianoGenieEventBridge);
+    console.log('🔧 Cleaned up old hand-based bridge');
+  }
+  
+  // Create new zone-based bridge function
+  const zoneBasedBridge = (data) => {
+    try {
+      // ✅ ENHANCED DATA EXTRACTION: Try multiple ways to get position data
+      let position = null;
+      let zoneResult = null;
+      
+      // Method 1: Direct position property
+      if (data.position && data.position.x !== undefined) {
+        position = data.position;
+      }
+      
+      // Method 2: Coordinates property (common in your system)
+      else if (data.coordinates && data.coordinates.finger) {
+        position = { x: data.coordinates.finger.x, y: data.coordinates.finger.y };
+      }
+      
+      // Method 3: Extract from finger coordinates
+      else if (data.coordinates && data.coordinates.x !== undefined) {
+        position = { x: data.coordinates.x, y: data.coordinates.y };
+      }
+      
+      // Method 4: Look for any x,y properties in the data
+      else if (data.x !== undefined && data.y !== undefined) {
+        position = { x: data.x, y: data.y };
+      }
+      
+      // Method 5: Check if zone is already determined (from system messages)
+      if (!position && typeof data.hand !== 'undefined') {
+        // Fallback: Use hand index as zone approximation
+        const zoneId = data.hand === 0 ? 'zone-left' : 'zone-right';
+        const zoneName = data.hand === 0 ? 'Zone 1 (Left)' : 'Zone 2 (Right)';
+        zoneResult = { zoneId, zoneName };
+        console.log(`🔄 Zone Bridge: Using hand-based fallback → ${zoneName}`);
+      }
+      
+      // Try zone detection if we have position
+      if (position && window.mediaPipeCamera?.testZoneDetection) {
+        try {
+          zoneResult = window.mediaPipeCamera.testZoneDetection(position.x, position.y);
+          console.log(`🎯 Zone Bridge: Position (${position.x.toFixed(3)}, ${position.y.toFixed(3)}) → ${zoneResult.zoneName}`);
+        } catch (error) {
+          console.warn('⚠️ Zone detection failed:', error);
+        }
+      }
+      
+      // If no zone result yet, try to parse from debug messages
+      if (!zoneResult && window.lastZonePinchData) {
+        zoneResult = window.lastZonePinchData;
+        console.log('🔄 Zone Bridge: Using cached zone data');
+      }
+      
+      // Final fallback: Try to determine zone from any available data
+      if (!zoneResult) {
+        console.warn('❌ Zone Bridge: Could not determine zone, using default');
+        return;
+      }
+      
+      // ✅ ZONE MAPPING: Convert zone to finger index
+      const zoneIndex = zoneResult.zoneId === 'zone-left' ? 0 : 1;
+      const fingerIndex = (zoneIndex * 4) + (data.finger || 0);
+      
+      // ✅ MUSIC: Send to Piano Genie
+      const isPinched = data.eventType === 'pinchStart' || (data.distance && data.distance < 50);
+      
+      if (typeof window.sendKeyToPianoGenie === 'function') {
+        window.sendKeyToPianoGenie(fingerIndex, isPinched);
+      }
+      
+      // ✅ DEBUG: Show zone-based mapping
+      const keyMappings = ['A', 'S', 'D', 'F', 'J', 'K', 'L', ';'];
+      const keyLabel = keyMappings[fingerIndex];
+      const fingerNames = ['Pinky', 'Ring', 'Middle', 'Index'];
+      const fingerName = fingerNames[data.finger] || 'Unknown';
+      
+      console.log(`🎯 ZONE BRIDGE: ${zoneResult.zoneName} ${fingerName} → Key ${keyLabel} (${data.eventType})`);
+      
+    } catch (error) {
+      console.error('🚨 Zone Bridge Error:', error);
+      console.log('🔍 Debug data:', data);
+    }
+  };
+  
+  // Install the new bridge
+  window.pianoGenieEventBridge = zoneBasedBridge;
+  
+  if (window.gcFreeOrchestrator) {
+    window.gcFreeOrchestrator.on('pinchState', window.pianoGenieEventBridge);
+    console.log('✅ Zone-based Piano Genie bridge installed!');
+    console.log('🎵 Now pinch in different zones to hear different notes!');
+  } else {
+    console.error('❌ gcFreeOrchestrator not available');
+  }
+};
+
+// ✅ ZONE DATA INTERCEPTOR: Capture zone information from system messages
+// This helps provide fallback data when direct detection fails
+let lastZonePinchRegex = /🎯 ZONE PINCH: \[([^\]]+)\]/;
+let originalConsoleLog = console.log;
+
+console.log = function(...args) {
+  const message = args.join(' ');
+  const zoneMatch = message.match(lastZonePinchRegex);
+  
+  if (zoneMatch) {
+    const zoneName = zoneMatch[1];
+    const zoneId = zoneName.includes('Left') ? 'zone-left' : 'zone-right';
+    window.lastZonePinchData = { zoneId, zoneName };
+  }
+  
+  return originalConsoleLog.apply(console, args);
+};
+
+/**
+ * Test the new zone-based bridge
+ */
+window.testZoneBasedBridge = function() {
+  console.log('🧪 TESTING ZONE-BASED BRIDGE...');
+  
+  const testEvents = [
+    { position: { x: 0.25, y: 0.5 }, finger: 2, distance: 30, eventType: 'pinchStart', desc: 'Zone 1 Middle' },
+    { position: { x: 0.75, y: 0.5 }, finger: 2, distance: 30, eventType: 'pinchStart', desc: 'Zone 2 Middle' },
+    { position: { x: 0.25, y: 0.5 }, finger: 0, distance: 30, eventType: 'pinchStart', desc: 'Zone 1 Pinky' },
+    { position: { x: 0.75, y: 0.5 }, finger: 0, distance: 30, eventType: 'pinchStart', desc: 'Zone 2 Pinky' }
+  ];
+  
+  testEvents.forEach((event, index) => {
+    setTimeout(() => {
+      console.log(`🎵 Testing ${event.desc}...`);
+      if (window.pianoGenieEventBridge) {
+        window.pianoGenieEventBridge(event);
+      }
+    }, index * 1000);
+  });
+};
+
+// 🔍 ENHANCED ZONE-BASED KEYBOARD MAPPING DIAGNOSTIC SCRIPT - PHASE 2
+// Copy-paste this entire block into your browser console while the app is running
+
+console.log('🔍 STARTING ZONE-BASED KEYBOARD MAPPING DIAGNOSTIC...');
+console.log('═══════════════════════════════════════════════════════════');
+
+// 🗺️ SECTION 1: ZONE DETECTION SYSTEM ANALYSIS
+console.log('\n🗺️ ZONE DETECTION SYSTEM:');
+console.log('─────────────────────────────');
+
+// Check for zone-related variables
+const zoneVars = {
+    'window.spatialZone': typeof window.spatialZone,
+    'window.currentZone': typeof window.currentZone,
+    'window.zoneLeft': typeof window.zoneLeft,
+    'window.zoneRight': typeof window.zoneRight,
+    'window.zone1': typeof window.zone1,
+    'window.zone2': typeof window.zone2,
+    'mediaPipeCamera.testZoneDetection': typeof window.mediaPipeCamera?.testZoneDetection
+};
+
+Object.entries(zoneVars).forEach(([name, type]) => {
+    console.log(`${type !== 'undefined' ? '✅' : '❌'} ${name}: ${type}`);
+});
+
+// Test zone detection if available
+if (window.mediaPipeCamera?.testZoneDetection) {
+    console.log('\n🧪 ZONE DETECTION TESTS:');
+    
+    const testPositions = [
+        {x: 0.25, y: 0.5, expected: 'Zone 1 (Left)'},
+        {x: 0.75, y: 0.5, expected: 'Zone 2 (Right)'},
+        {x: 0.5, y: 0.5, expected: 'Zone 2 (Right)'}, // Center = right
+        {x: 0.1, y: 0.3, expected: 'Zone 1 (Left)'},
+        {x: 0.9, y: 0.7, expected: 'Zone 2 (Right)'}
+    ];
+    
+    testPositions.forEach(({x, y, expected}) => {
+        const result = window.mediaPipeCamera.testZoneDetection(x, y);
+        const match = result?.zoneName === expected ? '✅' : '❌';
+        console.log(`${match} (${x}, ${y}) → ${result?.zoneName || 'FAILED'} (expected: ${expected})`);
+    });
+}
+
+// 🎹 SECTION 2: PIANO GENIE SYSTEM ANALYSIS
+console.log('\n🎹 PIANO GENIE SYSTEM:');
+console.log('───────────────────────');
+
+const pianoGenieVars = {
+    'pianoGenieEventBridge': typeof window.pianoGenieEventBridge,
+    'initializePianoGenieEventBridge': typeof window.initializePianoGenieEventBridge,
+    'cleanupPianoGenieEventBridge': typeof window.cleanupPianoGenieEventBridge,
+    'window.sendKeyToPianoGenie': typeof window.sendKeyToPianoGenie,
+    'createZoneBasedPianoGenieBridge': typeof window.createZoneBasedPianoGenieBridge
+};
+
+Object.entries(pianoGenieVars).forEach(([name, type]) => {
+    console.log(`${type !== 'undefined' ? '✅' : '❌'} ${name}: ${type}`);
+});
+
+// Current Piano Genie key mapping
+console.log('\n📝 CURRENT PIANO GENIE MAPPING:');
+console.log('OLD (Hand-based): left-pinky→A, left-ring→S, left-middle→D, left-index→F');
+console.log('                  right-index→J, right-middle→K, right-ring→L, right-pinky→;');
+console.log('NEW (Zone-based): zone1-pinky→A, zone1-ring→S, zone1-middle→D, zone1-index→F');
+console.log('                  zone2-pinky→J, zone2-ring→K, zone2-middle→L, zone2-index→;');
+
+// 📊 SECTION 3: EVENT SYSTEM ANALYSIS
+console.log('\n📊 EVENT SYSTEM:');
+console.log('──────────────────');
+
+const eventVars = {
+    'gcFreeOrchestrator': typeof window.gcFreeOrchestrator,
+    'gcFreeOrchestrator.emit': typeof window.gcFreeOrchestrator?.emit,
+    'gcFreeOrchestrator.on': typeof window.gcFreeOrchestrator?.on,
+    'UnifiedSettingsManager': typeof window.UnifiedSettingsManager,
+    'Logger': typeof window.Logger,
+    'Logger.system': typeof window.Logger?.system,
+    'Logger.throttle': typeof window.Logger?.throttle
+};
+
+Object.entries(eventVars).forEach(([name, type]) => {
+    console.log(`${type !== 'undefined' ? '✅' : '❌'} ${name}: ${type}`);
+});
+
+// 🧪 SECTION 4: ZONE-BASED KEY MAPPING PROTOTYPE FUNCTIONS
+console.log('\n🧪 CREATING ZONE MAPPING PROTOTYPE FUNCTIONS...');
+console.log('────────────────────────────────────────────────');
+
+// ✅ FOLLOW EXISTING PATTERN: Default mappings based on current system
+window.ZONE_MAPPING_DEFAULTS = {
+    0: 'A',  // Zone 1 (Left) - Pinky
+    1: 'S',  // Zone 1 (Left) - Ring  
+    2: 'D',  // Zone 1 (Left) - Middle
+    3: 'F',  // Zone 1 (Left) - Index
+    4: 'J',  // Zone 2 (Right) - Index
+    5: 'K',  // Zone 2 (Right) - Middle
+    6: 'L',  // Zone 2 (Right) - Ring
+    7: ';'   // Zone 2 (Right) - Pinky
+};
+
+/**
+ * Transform zone+finger data to Piano Genie key index
+ * @param {Object} data - {zoneId: 'zone-left'|'zone-right', finger: 0-3}
+ * @returns {number} Piano Genie key index (0-7)
+ */
+window.transformToKeyIndex = function(data) {
+    const { zoneId, finger } = data;
+    const zoneIndex = zoneId === 'zone-left' ? 0 : 1;
+    
+    // ✅ TRANSFORM: (hand * 4) + finger → (zone * 4) + finger
+    return (zoneIndex * 4) + finger;
+};
+
+/**
+ * Get current key mapping for zone+finger combination
+ * @param {string} zoneId - 'zone-left' or 'zone-right'
+ * @param {number} finger - 0=pinky, 1=ring, 2=middle, 3=index
+ * @returns {string} Keyboard key ('A', 'S', 'D', etc.)
+ */
+window.getCurrentZoneKeyMapping = function(zoneId, finger) {
+    // ✅ FOLLOW EXISTING PATTERN: Use defaults for prototype
+    const mappings = window.ZONE_MAPPING_DEFAULTS;
+    const keyIndex = window.transformToKeyIndex({ zoneId, finger });
+    return mappings[keyIndex];
+};
+
+/**
+ * Get finger name from index
+ * @param {number} finger - 0-3 finger index
+ * @returns {string} Finger name
+ */
+window.getFingerName = function(finger) {
+    const names = ['Pinky', 'Ring', 'Middle', 'Index'];
+    return names[finger] || 'Unknown';
+};
+
+/**
+ * Enrich pinch data with zone information
+ * @param {Object} data - Original pinch data
+ * @returns {Object} Enhanced data with zoneId and zoneName
+ */
+window.enrichWithZoneData = function(data) {
+    if (!data.position || !window.mediaPipeCamera) {
+        return data;
+    }
+    
+    // ✅ USE EXISTING SYSTEM: mediaPipeCamera.testZoneDetection
+    const zoneResult = window.mediaPipeCamera.testZoneDetection(data.position.x, data.position.y);
+    
+    return {
+        ...data,
+        zoneId: zoneResult?.zoneId,
+        zoneName: zoneResult?.zoneName,
+        zonePosition: zoneResult?.position
+    };
+};
+
+/**
+ * Test zone detection and key mapping
+ * @param {number} x - Normalized x coordinate (0-1)
+ * @param {number} y - Normalized y coordinate (0-1) 
+ * @param {number} finger - Finger index (0-3)
+ */
+window.testZoneKeyMapping = function(x = 0.25, y = 0.5, finger = 2) {
+    if (window.Logger?.system) {
+        window.Logger.system('🧪 ZONE KEY MAPPING TEST');
+        window.Logger.system('═══════════════════════════════');
+        
+        // Test zone detection
+        const zoneResult = window.mediaPipeCamera.testZoneDetection(x, y);
+        window.Logger.system(`📍 Position (${x}, ${y}) → ${zoneResult.zoneName}`);
+        
+        // Test key mapping
+        const keyMapping = window.getCurrentZoneKeyMapping(zoneResult.zoneId, finger);
+        window.Logger.system(`🎹 ${zoneResult.zoneName} ${window.getFingerName(finger)} → Key: ${keyMapping}`);
+        
+        // Test Piano Genie integration 
+        const mockData = {
+            eventType: 'pinchStart',
+            hand: zoneResult.zoneId === 'zone-left' ? 0 : 1,
+            finger: finger,
+            position: { x, y },
+            distance: 45.0,
+            velocity: 64,
+            timestamp: Date.now()
+        };
+        
+        const enrichedData = window.enrichWithZoneData(mockData);
+        window.Logger.system(`🎵 Enhanced Event:`, enrichedData);
+        
+        return {
+            zone: zoneResult,
+            keyMapping: keyMapping,
+            enrichedData: enrichedData
+        };
+    } else {
+        console.log('⚠️ Logger.system not available, using console.log');
+        console.log('🧪 ZONE KEY MAPPING TEST');
+        
+        const zoneResult = window.mediaPipeCamera.testZoneDetection(x, y);
+        console.log(`📍 Position (${x}, ${y}) → ${zoneResult.zoneName}`);
+        
+        const keyMapping = window.getCurrentZoneKeyMapping(zoneResult.zoneId, finger);
+        console.log(`🎹 ${zoneResult.zoneName} ${window.getFingerName(finger)} → Key: ${keyMapping}`);
+        
+        return { zone: zoneResult, keyMapping: keyMapping };
+    }
+};
+
+/**
+ * Complete zone mapping diagnostic
+ */
+window.diagnosticZoneMapping = function() {
+    const logger = window.Logger?.system || console.log;
+    
+    logger('🔍 COMPLETE ZONE MAPPING DIAGNOSTIC');
+    logger('═════════════════════════════════════');
+    
+    // Test all combinations
+    const zones = [
+        { id: 'zone-left', x: 0.25, name: 'Zone 1 (Left)' },
+        { id: 'zone-right', x: 0.75, name: 'Zone 2 (Right)' }
+    ];
+    
+    const fingers = ['Pinky', 'Ring', 'Middle', 'Index'];
+    
+    zones.forEach(zone => {
+        logger(`\n🗺️ ${zone.name}:`);
+        fingers.forEach((fingerName, fingerIndex) => {
+            const result = window.testZoneKeyMapping(zone.x, 0.5, fingerIndex);
+            logger(`  ${fingerName} → ${result.keyMapping}`);
+        });
+    });
+    
+    logger('\n✅ Zone mapping diagnostic complete');
+};
+
+/**
+ * Test integration with existing Piano Genie system
+ */
+window.testZonePianoGenieIntegration = function() {
+    const logger = window.Logger?.system || console.log;
+    
+    logger('🎹 ZONE PIANO GENIE INTEGRATION TEST');
+    logger('════════════════════════════════════');
+    
+    // Check Piano Genie bridge status
+    const bridgeActive = !!(window.pianoGenieEventBridge);
+    logger(`🔗 Piano Genie Bridge: ${bridgeActive ? 'Active' : 'Inactive'}`);
+    
+    if (!bridgeActive) {
+        const warnLogger = window.Logger?.warn || console.warn;
+        warnLogger('⚠️ Piano Genie bridge not active - run initializePianoGenieEventBridge()');
+        return;
+    }
+    
+    // Test zone-enhanced bridge
+    logger('🧪 Testing zone-enhanced events...');
+    
+    // Simulate pinch events in different zones
+    const testEvents = [
+        { x: 0.25, y: 0.5, finger: 2, desc: 'Zone 1, Middle finger' },
+        { x: 0.75, y: 0.5, finger: 1, desc: 'Zone 2, Ring finger' },
+        { x: 0.1, y: 0.3, finger: 0, desc: 'Zone 1, Pinky finger' },
+        { x: 0.9, y: 0.7, finger: 3, desc: 'Zone 2, Index finger' }
+    ];
+    
+    testEvents.forEach((event, index) => {
+        setTimeout(() => {
+            const result = window.testZoneKeyMapping(event.x, event.y, event.finger);
+            logger(`🎵 Test ${index + 1}: ${event.desc} → Key: ${result.keyMapping}`);
+        }, index * 1000);
+    });
+};
+
+/**
+ * Live zone detection with real pinch events
+ * Call this, then make pinch gestures to see live zone detection
+ */
+window.startLiveZoneDetection = function() {
+    if (!window.gcFreeOrchestrator) {
+        console.error('❌ gcFreeOrchestrator not available');
+        return;
+    }
+    
+    const logger = window.Logger?.system || console.log;
+    logger('🎯 STARTING LIVE ZONE DETECTION - Make pinch gestures now!');
+    logger('═══════════════════════════════════════════════════════════');
+    
+    // Create event listener for real pinch events
+    window.liveZoneListener = (data) => {
+        if (data.position && window.mediaPipeCamera) {
+            const enrichedData = window.enrichWithZoneData(data);
+            const keyMapping = window.getCurrentZoneKeyMapping(enrichedData.zoneId, data.finger);
+            
+            // ✅ FOLLOW EXISTING PATTERN: Throttled logging
+            if (window.Logger?.throttle) {
+                window.Logger.throttle('live-zone-detection', () => {
+                    window.Logger.system(`🎯 LIVE: ${enrichedData.zoneName} ${window.getFingerName(data.finger)} → ${keyMapping} (${data.eventType})`);
+                }, 1000);
+            } else {
+                console.log(`🎯 LIVE: ${enrichedData.zoneName} ${window.getFingerName(data.finger)} → ${keyMapping} (${data.eventType})`);
+            }
+        }
+    };
+    
+    // Listen to real pinch events
+    window.gcFreeOrchestrator.on('pinchState', window.liveZoneListener);
+    
+    logger('✅ Live zone detection active - watching for pinch events...');
+    logger('💡 Run stopLiveZoneDetection() to stop');
+};
+
+/**
+ * Stop live zone detection
+ */
+window.stopLiveZoneDetection = function() {
+    if (window.liveZoneListener && window.gcFreeOrchestrator) {
+        window.gcFreeOrchestrator.off('pinchState', window.liveZoneListener);
+        window.liveZoneListener = null;
+        
+        const logger = window.Logger?.system || console.log;
+        logger('🛑 Live zone detection stopped');
+    }
+};
+
+/**
+ * Test zone boundary edge cases
+ */
+window.testZoneBoundaries = function() {
+    const logger = window.Logger?.system || console.log;
+    
+    logger('🔍 ZONE BOUNDARY EDGE CASE TESTING');
+    logger('═══════════════════════════════════');
+    
+    // Test boundary conditions
+    const boundaryTests = [
+        {x: 0.49, y: 0.5, desc: 'Just left of center'},
+        {x: 0.50, y: 0.5, desc: 'Exactly center'},
+        {x: 0.51, y: 0.5, desc: 'Just right of center'},
+        {x: 0.0, y: 0.5, desc: 'Far left edge'},
+        {x: 1.0, y: 0.5, desc: 'Far right edge'}
+    ];
+    
+    boundaryTests.forEach(test => {
+        const result = window.mediaPipeCamera.testZoneDetection(test.x, test.y);
+        logger(`📐 ${test.desc} (${test.x}) → ${result?.zoneName}`);
+    });
+};
+
+// 🚀 SECTION 5: READY-TO-USE TESTING COMMANDS
+console.log('\n🚀 PROTOTYPE FUNCTIONS CREATED! Ready for testing:');
+console.log('════════════════════════════════════════════════════');
+console.log('');
+console.log('📊 BASIC TESTING:');
+console.log('  testZoneKeyMapping()           - Test single position');
+console.log('  diagnosticZoneMapping()        - Test all combinations');
+console.log('  testZoneBoundaries()           - Test edge cases');
+console.log('');
+console.log('🎹 PIANO GENIE INTEGRATION:');
+console.log('  createZoneBasedPianoGenieBridge() - REPLACE hand-based with zone-based');
+console.log('  testZoneBasedBridge()          - Test new zone bridge');
+console.log('  testZonePianoGenieIntegration() - Test Piano Genie bridge');
+console.log('');
+console.log('🎯 LIVE TESTING:');
+console.log('  startLiveZoneDetection()       - Watch real pinch events');
+console.log('  stopLiveZoneDetection()        - Stop live detection');
+console.log('');
+console.log('💡 EXAMPLES:');
+console.log('  testZoneKeyMapping(0.25, 0.5, 2)  // Zone 1, Middle finger');
+console.log('  testZoneKeyMapping(0.75, 0.5, 0)  // Zone 2, Pinky finger');
+console.log('');
+console.log('🔧 TO FIX YOUR PROBLEM:');
+console.log('  1. createZoneBasedPianoGenieBridge()  // Replace broken bridge');
+console.log('  2. testZoneBasedBridge()              // Test different zones');
+console.log('');
+console.log('✅ All functions use your existing Logger.system() and patterns!');
+console.log('');
+
+// Auto-run basic diagnostic
+if (window.mediaPipeCamera?.testZoneDetection) {
+    console.log('🧪 AUTO-RUNNING BASIC DIAGNOSTIC...');
+    setTimeout(() => {
+        window.diagnosticZoneMapping();
+        console.log('\n🎯 Ready for manual testing! Try the functions above.');
+        console.log('\n🔧 TO FIX THE MUSIC PROBLEM:');
+        console.log('   Run: createZoneBasedPianoGenieBridge()');
+    }, 1000);
+} else {
+    console.log('⚠️ Zone detection not available - start camera system first');
+}
+
+/**
+ * 🔍 COMPREHENSIVE ZONE-BASED KEYBOARD MAPPING DIAGNOSTIC
+ * Version: v1.0.0 - July 1, 2025
+ * Purpose: Analyze implementation status vs documentation for zone-based mapping system
+ * Usage: Run diagnosticZoneKeyboardMapping() in browser console
+ */
+
+/**
+ * 🗺️ ZONE-BASED KEYBOARD MAPPING SYSTEM DIAGNOSTIC
+ * Comprehensive analysis of current implementation vs documented specifications
+ * Reveals exactly where you are in the development process
+ */
+function diagnosticZoneKeyboardMapping() {
+    console.group('🗺️ ZONE-BASED KEYBOARD MAPPING SYSTEM DIAGNOSTIC');
+    console.log('📅 Diagnostic Run:', new Date().toLocaleString());
+    console.log('🎯 Purpose: Analyze current vs documented zone mapping implementation');
+    console.log('');
+
+    const results = {
+        zoneDetection: {},
+        pianoGenieIntegration: {},
+        currentMappingSystem: {},
+        eventSystem: {},
+        implementationGaps: {},
+        nextSteps: []
+    };
+
+    // 🔍 PHASE 1: Zone Detection Capabilities
+    console.group('🔍 PHASE 1: ZONE DETECTION ANALYSIS');
+    
+    try {
+        // Check MediaPipe Camera Zone Detection
+        if (window.mediaPipeCamera && typeof window.mediaPipeCamera.testZoneDetection === 'function') {
+            console.log('✅ Zone Detection Function: FOUND');
+            
+            // Test zone detection with sample coordinates
+            const testLeft = window.mediaPipeCamera.testZoneDetection(0.25, 0.5);
+            const testRight = window.mediaPipeCamera.testZoneDetection(0.75, 0.5);
+            
+            console.log('🧪 Zone Test Results:');
+            console.log('   Left (0.25, 0.5):', testLeft);
+            console.log('   Right (0.75, 0.5):', testRight);
+            
+            results.zoneDetection.available = true;
+            results.zoneDetection.testResults = { testLeft, testRight };
+            
+            // Verify zone ID format
+            if (testLeft.zoneId && testRight.zoneId) {
+                console.log('✅ Zone ID Format: CORRECT (zone-left, zone-right expected)');
+                results.zoneDetection.idFormat = 'correct';
+            } else {
+                console.log('❌ Zone ID Format: MISSING or INCORRECT');
+                results.zoneDetection.idFormat = 'incorrect';
+            }
+        } else {
+            console.log('❌ Zone Detection Function: NOT FOUND');
+            results.zoneDetection.available = false;
+        }
+        
+        // Check for MediaPipe Camera System
+        if (window.mediaPipeCamera) {
+            console.log('✅ MediaPipe Camera System: INITIALIZED');
+            results.zoneDetection.cameraSystem = 'initialized';
+        } else {
+            console.log('❌ MediaPipe Camera System: NOT FOUND');
+            results.zoneDetection.cameraSystem = 'missing';
+        }
+
+    } catch (error) {
+        console.error('🚨 Zone Detection Analysis Error:', error);
+        results.zoneDetection.error = error.message;
+    }
+    
+    console.groupEnd();
+
+    // 🎹 PHASE 2: Piano Genie Integration Analysis
+    console.group('🎹 PHASE 2: PIANO GENIE INTEGRATION ANALYSIS');
+    
+    try {
+        // Check Piano Genie Functions
+        const pianoGenieFunctions = [
+            'showPianoGenieDemo',
+            'hidePianoGenieDemo', 
+            'initializePianoGenieEventBridge',
+            'getPianoGenieStatus'
+        ];
+        
+        console.log('🔍 Piano Genie Function Availability:');
+        pianoGenieFunctions.forEach(funcName => {
+            if (window[funcName] && typeof window[funcName] === 'function') {
+                console.log(`   ✅ ${funcName}: AVAILABLE`);
+                results.pianoGenieIntegration[funcName] = 'available';
+            } else {
+                console.log(`   ❌ ${funcName}: MISSING`);
+                results.pianoGenieIntegration[funcName] = 'missing';
+            }
+        });
+
+        // Check Piano Genie DOM Elements
+        const pianoGenieContainer = document.getElementById('piano-genie-container');
+        if (pianoGenieContainer) {
+            console.log('✅ Piano Genie Container: FOUND');
+            console.log('   Visibility:', getComputedStyle(pianoGenieContainer).display);
+            results.pianoGenieIntegration.container = 'found';
+        } else {
+            console.log('❌ Piano Genie Container: NOT FOUND');
+            results.pianoGenieIntegration.container = 'missing';
+        }
+
+        // Check Piano Genie iframe
+        const pianoGenieIframe = document.querySelector('#piano-genie-container iframe');
+        if (pianoGenieIframe) {
+            console.log('✅ Piano Genie iframe: FOUND');
+            console.log('   Source:', pianoGenieIframe.src || 'No source set');
+            results.pianoGenieIntegration.iframe = 'found';
+        } else {
+            console.log('❌ Piano Genie iframe: NOT FOUND');
+            results.pianoGenieIntegration.iframe = 'missing';
+        }
+
+        // Check Feature Flags
+        if (window.FeatureFlags && window.FeatureFlags.pianoGenieEnabled !== undefined) {
+            console.log('✅ Piano Genie Feature Flag:', window.FeatureFlags.pianoGenieEnabled);
+            results.pianoGenieIntegration.featureFlag = window.FeatureFlags.pianoGenieEnabled;
+        } else {
+            console.log('❌ Piano Genie Feature Flag: NOT FOUND');
+            results.pianoGenieIntegration.featureFlag = 'missing';
+        }
+
+    } catch (error) {
+        console.error('🚨 Piano Genie Analysis Error:', error);
+        results.pianoGenieIntegration.error = error.message;
+    }
+    
+    console.groupEnd();
+
+    // ⚙️ PHASE 3: Current Mapping System Analysis
+    console.group('⚙️ PHASE 3: CURRENT MAPPING SYSTEM ANALYSIS');
+    
+    try {
+        // Check for Zone-Based Mapping Module
+        if (window.ZoneKeyMappingModule) {
+            console.log('✅ ZoneKeyMappingModule: IMPLEMENTED');
+            results.currentMappingSystem.zoneModule = 'implemented';
+            
+            // Test module methods
+            const zoneMethods = ['transformToKeyIndex', 'getCurrentZoneKeyMapping', 'setZoneKeyMapping'];
+            zoneMethods.forEach(method => {
+                if (window.ZoneKeyMappingModule.prototype[method]) {
+                    console.log(`   ✅ ${method}: AVAILABLE`);
+                } else {
+                    console.log(`   ❌ ${method}: MISSING`);
+                }
+            });
+        } else {
+            console.log('❌ ZoneKeyMappingModule: NOT IMPLEMENTED');
+            results.currentMappingSystem.zoneModule = 'missing';
+        }
+
+        // Check for Hand-Based Mapping (current system)
+        console.log('🔍 Current Pinch Processing System:');
+        
+        // Look for precision pinch events
+        if (window.gcFreeOrchestrator) {
+            console.log('✅ Event Orchestrator: AVAILABLE');
+            
+            // Check event listeners for pinch processing
+            const eventTypes = ['pinchState', 'hand.precision.process', 'hand.wrist.process'];
+            console.log('🎯 Event System Analysis:');
+            eventTypes.forEach(eventType => {
+                console.log(`   📡 Event Type: ${eventType}`);
+                // Note: Can't easily inspect event listeners, but can log their existence
+            });
+            
+            results.currentMappingSystem.eventSystem = 'available';
+        } else {
+            console.log('❌ Event Orchestrator: NOT FOUND');
+            results.currentMappingSystem.eventSystem = 'missing';
+        }
+
+        // Check for existing pinch-to-key mapping logic
+        console.log('🔍 Searching for Mapping Logic Patterns...');
+        
+        // Check if we can find evidence of current mapping approach
+        if (window.precisionPinchModule) {
+            console.log('✅ Precision Pinch Module: AVAILABLE');
+            results.currentMappingSystem.pinchModule = 'available';
+            
+            // Test if we can get debug info to understand current mapping
+            if (typeof window.precisionPinchModule.getDebugInfo === 'function') {
+                try {
+                    const debugInfo = window.precisionPinchModule.getDebugInfo();
+                    console.log('📊 Current Pinch Debug Info:', debugInfo);
+                    results.currentMappingSystem.debugInfo = debugInfo;
+                } catch (e) {
+                    console.log('⚠️ Could not retrieve pinch debug info:', e.message);
+                }
+            }
+        } else {
+            console.log('❌ Precision Pinch Module: NOT FOUND');
+            results.currentMappingSystem.pinchModule = 'missing';
+        }
+
+    } catch (error) {
+        console.error('🚨 Mapping System Analysis Error:', error);
+        results.currentMappingSystem.error = error.message;
+    }
+    
+    console.groupEnd();
+
+    // 📊 PHASE 4: Settings & Persistence Analysis  
+    console.group('📊 PHASE 4: SETTINGS & PERSISTENCE ANALYSIS');
+    
+    try {
+        // Check UnifiedSettingsManager
+        if (window.UnifiedSettingsManager) {
+            console.log('✅ UnifiedSettingsManager: AVAILABLE');
+            results.eventSystem.settingsManager = 'available';
+            
+            // Check for zone mapping settings
+            const zoneMappings = window.UnifiedSettingsManager.load('ZONE_KEYBOARD', 'mappings');
+            if (zoneMappings) {
+                console.log('✅ Zone Keyboard Mappings: FOUND');
+                console.log('📋 Current Zone Mappings:', zoneMappings);
+                results.currentMappingSystem.savedMappings = zoneMappings;
+            } else {
+                console.log('❌ Zone Keyboard Mappings: NOT FOUND (no saved settings)');
+                results.currentMappingSystem.savedMappings = null;
+            }
+            
+            // Check for hand-based mappings (current system)
+            const handMappings = window.UnifiedSettingsManager.load('PRECISION_PINCH', 'mappings');
+            if (handMappings) {
+                console.log('📋 Current Hand Mappings Found:', handMappings);
+                results.currentMappingSystem.handMappings = handMappings;
+            }
+            
+        } else {
+            console.log('❌ UnifiedSettingsManager: NOT FOUND');
+            results.eventSystem.settingsManager = 'missing';
+        }
+
+        // Check Logger system
+        if (window.Logger) {
+            console.log('✅ Logger System: AVAILABLE');
+            results.eventSystem.logger = 'available';
+        } else {
+            console.log('❌ Logger System: NOT FOUND');
+            results.eventSystem.logger = 'missing';
+        }
+
+    } catch (error) {
+        console.error('🚨 Settings Analysis Error:', error);
+        results.eventSystem.error = error.message;
+    }
+    
+    console.groupEnd();
+
+    // 🔍 PHASE 5: Implementation Gap Analysis
+    console.group('🔍 PHASE 5: IMPLEMENTATION GAP ANALYSIS');
+    
+    console.log('📋 DOCUMENTATION vs REALITY:');
+    
+    // Gap 1: Zone-Based Mapping Module
+    if (!results.currentMappingSystem.zoneModule || results.currentMappingSystem.zoneModule === 'missing') {
+        console.log('❌ GAP 1: ZoneKeyMappingModule not implemented');
+        results.implementationGaps.zoneModule = 'missing - need to create module';
+        results.nextSteps.push('Create ZoneKeyMappingModule class with dependency injection');
+    } else {
+        console.log('✅ ZoneKeyMappingModule: IMPLEMENTED');
+    }
+
+    // Gap 2: Zone-Enhanced Piano Genie Bridge
+    if (typeof window.initializePianoGenieEventBridge === 'function') {
+        console.log('⚠️ GAP 2: Piano Genie bridge exists but may be hand-based, not zone-based');
+        results.implementationGaps.pianoGenieBridge = 'exists but may need zone enhancement';
+        results.nextSteps.push('Enhance Piano Genie bridge with zone data enrichment');
+    } else {
+        console.log('❌ GAP 2: Piano Genie event bridge missing entirely');
+        results.implementationGaps.pianoGenieBridge = 'missing entirely';
+        results.nextSteps.push('Create Piano Genie event bridge with zone support');
+    }
+
+    // Gap 3: Zone Data Enrichment
+    if (results.zoneDetection.available) {
+        console.log('✅ Zone detection available - ready for data enrichment');
+        results.implementationGaps.zoneEnrichment = 'foundation ready';
+    } else {
+        console.log('❌ GAP 3: Zone detection not available for data enrichment');
+        results.implementationGaps.zoneEnrichment = 'zone detection system missing';
+        results.nextSteps.push('Fix or implement zone detection system');
+    }
+
+    // Gap 4: Event System Integration
+    if (results.currentMappingSystem.eventSystem === 'available') {
+        console.log('✅ Event system ready for zone-based events');
+        results.implementationGaps.eventIntegration = 'ready';
+    } else {
+        console.log('❌ GAP 4: Event system not ready for zone integration');
+        results.implementationGaps.eventIntegration = 'event system missing';
+        results.nextSteps.push('Initialize event orchestrator system');
+    }
+
+    console.groupEnd();
+
+    // 🎯 PHASE 6: Recommendations & Next Steps
+    console.group('🎯 PHASE 6: RECOMMENDATIONS & NEXT STEPS');
+    
+    console.log('📊 CURRENT STATUS SUMMARY:');
+    console.log('Zone Detection:', results.zoneDetection.available ? '✅ Ready' : '❌ Missing');
+    console.log('Piano Genie:', results.pianoGenieIntegration.container === 'found' ? '✅ Ready' : '❌ Missing');  
+    console.log('Event System:', results.currentMappingSystem.eventSystem === 'available' ? '✅ Ready' : '❌ Missing');
+    console.log('Zone Module:', results.currentMappingSystem.zoneModule === 'implemented' ? '✅ Done' : '❌ Missing');
+    
+    console.log('');
+    console.log('🚀 RECOMMENDED NEXT STEPS:');
+    results.nextSteps.forEach((step, index) => {
+        console.log(`${index + 1}. ${step}`);
+    });
+
+    if (results.nextSteps.length === 0) {
+        console.log('🎉 No implementation gaps detected! Zone-based mapping may be fully implemented.');
+    }
+
+    console.log('');
+    console.log('🔧 QUICK PROTOTYPE TEST:');
+    console.log('Run this to test current mapping system:');
+    console.log('testCurrentMappingSystem()');
+
+    console.groupEnd();
+
+    // Store results globally for further analysis
+    window.zoneMappingDiagnosticResults = results;
+    
+    console.log('');
+    console.log('📊 Full diagnostic results saved to: window.zoneMappingDiagnosticResults');
+    console.groupEnd();
+    
+    return results;
+}
+
+/**
+ * 🧪 TEST CURRENT MAPPING SYSTEM
+ * Quick test to see what mapping system is actually running
+ */
+function testCurrentMappingSystem() {
+    console.group('🧪 CURRENT MAPPING SYSTEM TEST');
+    
+    try {
+        // Test 1: Zone Detection
+        if (window.mediaPipeCamera && window.mediaPipeCamera.testZoneDetection) {
+            console.log('✅ Testing zone detection...');
+            const leftZone = window.mediaPipeCamera.testZoneDetection(0.3, 0.5);
+            const rightZone = window.mediaPipeCamera.testZoneDetection(0.7, 0.5);
+            
+            console.log('Left side result:', leftZone);
+            console.log('Right side result:', rightZone);
+            
+            // Test zone-to-key mapping logic
+            if (leftZone.zoneId && rightZone.zoneId) {
+                console.log('🧮 Testing mapping logic:');
+                
+                // Simulate finger combinations
+                for (let finger = 0; finger < 4; finger++) {
+                    const leftKey = leftZone.zoneId === 'zone-left' ? (0 * 4) + finger : (1 * 4) + finger;
+                    const rightKey = rightZone.zoneId === 'zone-right' ? (1 * 4) + finger : (0 * 4) + finger;
+                    
+                    const fingerNames = ['Pinky', 'Ring', 'Middle', 'Index'];
+                    console.log(`${fingerNames[finger]}: Left Zone → ${leftKey}, Right Zone → ${rightKey}`);
+                }
+            }
+        } else {
+            console.log('❌ Zone detection not available for testing');
+        }
+
+        // Test 2: Event System  
+        if (window.gcFreeOrchestrator) {
+            console.log('✅ Event system available');
+            
+            // Test event emission (safe test)
+            try {
+                window.gcFreeOrchestrator.emit('test-zone-mapping', {
+                    zoneId: 'zone-left',
+                    finger: 0,
+                    position: { x: 0.3, y: 0.5 },
+                    timestamp: Date.now()
+                });
+                console.log('✅ Event emission test successful');
+            } catch (e) {
+                console.log('⚠️ Event emission test failed:', e.message);
+            }
+        } else {
+            console.log('❌ Event system not available');
+        }
+
+        // Test 3: Settings System
+        if (window.UnifiedSettingsManager) {
+            console.log('✅ Testing settings system...');
+            
+            // Check what mapping settings exist
+            const zoneSettings = window.UnifiedSettingsManager.load('ZONE_KEYBOARD', 'mappings');
+            const handSettings = window.UnifiedSettingsManager.load('PRECISION_PINCH', 'mappings');
+            
+            console.log('Zone settings found:', !!zoneSettings);
+            console.log('Hand settings found:', !!handSettings);
+            
+            if (zoneSettings) {
+                console.log('Current zone mappings:', zoneSettings);
+            }
+        } else {
+            console.log('❌ Settings system not available');
+        }
+
+        console.log('');
+        console.log('🎯 CONCLUSION:');
+        if (window.mediaPipeCamera && window.mediaPipeCamera.testZoneDetection && window.gcFreeOrchestrator) {
+            console.log('✅ FOUNDATION READY: Zone detection + Event system available');
+            console.log('🚧 IMPLEMENTATION NEEDED: Zone-to-key mapping module');
+        } else {
+            console.log('❌ FOUNDATION INCOMPLETE: Missing core systems');
+        }
+
+    } catch (error) {
+        console.error('🚨 Test error:', error);
+    }
+    
+    console.groupEnd();
+}
+
+/**
+ * 🔍 QUICK ZONE TEST
+ * Test zone detection with current hand position (if camera is running)
+ */
+function testZoneDetectionLive() {
+    if (!window.mediaPipeCamera || !window.mediaPipeCamera.testZoneDetection) {
+        console.log('❌ Zone detection not available');
+        return;
+    }
+
+    console.log('🎯 Testing zone detection with sample positions...');
+    
+    // Test common positions
+    const testPositions = [
+        { x: 0.2, y: 0.5, desc: 'Far Left' },
+        { x: 0.4, y: 0.5, desc: 'Left' },
+        { x: 0.5, y: 0.5, desc: 'Center' },
+        { x: 0.6, y: 0.5, desc: 'Right' },
+        { x: 0.8, y: 0.5, desc: 'Far Right' }
+    ];
+
+    testPositions.forEach(pos => {
+        const result = window.mediaPipeCamera.testZoneDetection(pos.x, pos.y);
+        console.log(`${pos.desc} (${pos.x}, ${pos.y}):`, result);
+    });
+}
+
+// Auto-expose functions globally
+window.diagnosticZoneKeyboardMapping = diagnosticZoneKeyboardMapping;
+window.testCurrentMappingSystem = testCurrentMappingSystem;
+window.testZoneDetectionLive = testZoneDetectionLive;
+
+console.log('🔍 Zone Keyboard Mapping Diagnostics Loaded!');
+console.log('📋 Available Commands:');
+console.log('  • diagnosticZoneKeyboardMapping() - Full system analysis');
+console.log('  • testCurrentMappingSystem() - Test current implementation');
+console.log('  • testZoneDetectionLive() - Test zone detection with samples'); 

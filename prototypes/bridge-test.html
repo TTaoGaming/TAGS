@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌉 Gesture Bridge Test Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: rgba(0,0,0,0.3);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+        }
+        
+        .btn.secondary {
+            background: #666;
+        }
+        
+        .btn.secondary:hover {
+            background: #555;
+        }
+        
+        .main-content {
+            height: calc(100vh - 140px);
+            display: flex;
+        }
+        
+        .piano-panel {
+            flex: 1;
+            border: 2px solid rgba(255,255,255,0.2);
+            margin: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .panel-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 10;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0,0,0,0.8);
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 400px;
+        }
+        
+        .debug-panel {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            height: 80px;
+        }
+        
+        .debug-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .debug-label {
+            font-size: 12px;
+            margin-right: 15px;
+            min-width: 80px;
+        }
+        
+        .key-indicator {
+            display: inline-flex;
+            width: 35px;
+            height: 35px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            margin-right: 5px;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .key-indicator.active {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+            transform: scale(1.1);
+        }
+        
+        .status-text {
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .connection-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #ff4444;
+            transition: background 0.3s ease;
+        }
+        
+        .connection-dot.connected {
+            background: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">🌉 Gesture Bridge Test Tool</div>
+        <div class="controls">
+            <button class="btn" onclick="openHandTrackingApp()">🤚 Open Hand Tracking</button>
+            <button class="btn secondary" onclick="testKey('A')">🧪 Test Key A</button>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="piano-panel">
+            <div class="panel-label">🎹 Piano Genie Target</div>
+            <div class="instructions" id="instructions">
+                <h3>🎯 Bridge Test Instructions</h3>
+                <p><strong>Step 1:</strong> Click "Open Hand Tracking" to launch your app in a new window</p>
+                <p><strong>Step 2:</strong> Piano Genie will load below</p>
+                <p><strong>Step 3:</strong> Make pinch gestures in your app window</p>
+                <p><strong>Step 4:</strong> Watch Piano Genie respond to your gestures!</p>
+                <br>
+                <button class="btn" onclick="loadPianoGenie()">🎹 Load Piano Genie</button>
+            </div>
+            <iframe id="pianoGenieFrame" src="" width="100%" height="100%" frameborder="0" style="display: none;"></iframe>
+        </div>
+    </div>
+    
+    <div class="debug-panel">
+        <div class="debug-row">
+            <div class="debug-label">Keys:</div>
+            <div class="key-indicator" data-key="A">A</div>
+            <div class="key-indicator" data-key="S">S</div>
+            <div class="key-indicator" data-key="D">D</div>
+            <div class="key-indicator" data-key="F">F</div>
+            <div class="key-indicator" data-key="J">J</div>
+            <div class="key-indicator" data-key="K">K</div>
+            <div class="key-indicator" data-key="L">L</div>
+            <div class="key-indicator" data-key=";">;</div>
+            <div class="status-text" id="statusText">
+                <span class="connection-dot" id="connectionDot"></span>
+                Waiting for connections...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🌉 Gesture Bridge Test Tool loaded');
+        
+        // Key mapping: finger index to keyboard key
+        const FINGER_TO_KEY = [
+            'KeyA', 'KeyS', 'KeyD', 'KeyF',  // Left hand: index, middle, ring, pinky
+            'KeyJ', 'KeyK', 'KeyL', 'Semicolon'  // Right hand: index, middle, ring, pinky
+        ];
+        
+        const KEY_LABELS = ['A', 'S', 'D', 'F', 'J', 'K', 'L', ';'];
+        
+        // State tracking
+        const activeKeys = new Set();
+        const fingerStates = new Array(8).fill(false);
+        let handTrackingWindow = null;
+        let pianoGenieFrame = null;
+        
+        // DOM elements
+        const connectionDot = document.getElementById('connectionDot');
+        const statusText = document.getElementById('statusText');
+        const instructions = document.getElementById('instructions');
+        
+        // Open hand tracking app in new window (full camera access)
+        function openHandTrackingApp() {
+            handTrackingWindow = window.open('../index-modular-monolith.html', 'handTracking', 
+                'width=800,height=600,resizable=yes,scrollbars=yes');
+            
+            if (handTrackingWindow) {
+                updateStatus('Hand tracking app opening in new window...');
+                
+                // Check if window is still open
+                const checkWindow = setInterval(() => {
+                    if (handTrackingWindow.closed) {
+                        clearInterval(checkWindow);
+                        updateStatus('Hand tracking window closed');
+                        connectionDot.classList.remove('connected');
+                    }
+                }, 1000);
+            } else {
+                updateStatus('Failed to open hand tracking window - check popup blocker');
+            }
+        }
+        
+        // Load Piano Genie in iframe
+        function loadPianoGenie() {
+            pianoGenieFrame = document.getElementById('pianoGenieFrame');
+            pianoGenieFrame.src = '../piano-genie-clone/index.html';
+            pianoGenieFrame.style.display = 'block';
+            instructions.style.display = 'none';
+            updateStatus('Piano Genie loaded - ready for bridge events');
+        }
+        
+        // Listen for bridge events from hand tracking app
+        window.addEventListener('message', (event) => {
+            // Filter out React DevTools and other noise
+            if (event.data && event.data.source === 'react-devtools-content-script') {
+                return; // Ignore React DevTools messages
+            }
+            
+            console.log('🌉 Received message:', event.data);
+            if (event.data && event.data.type === 'gesture-keyboard') {
+                console.log('🎯 Processing gesture-keyboard event:', event.data);
+                handleBridgeEvent(event.data);
+            } else if (event.data) {
+                console.log('⚠️ Unknown message type:', event.data.type || 'no type');
+            }
+        });
+        
+        // Handle bridge events
+        function handleBridgeEvent(data) {
+            console.log('🌉 Handling bridge event:', data);
+            connectionDot.classList.add('connected');
+            
+            if (data.eventType === 'pinch') {
+                const fingerIndex = (data.data.hand * 4) + data.data.finger;
+                const keyCode = FINGER_TO_KEY[fingerIndex];
+                const keyLabel = KEY_LABELS[fingerIndex];
+                
+                if (data.data.isPinched) {
+                    // Pinch start - key down
+                    if (!activeKeys.has(keyCode)) {
+                        activeKeys.add(keyCode);
+                        fingerStates[fingerIndex] = true;
+                        dispatchKeyEvent('keydown', keyCode);
+                        updateKeyIndicator(keyLabel, true);
+                        updateStatus(`Key ${keyLabel} pressed (Hand ${data.data.hand}, Finger ${data.data.finger})`);
+                    }
+                } else {
+                    // Pinch end - key up
+                    if (activeKeys.has(keyCode)) {
+                        activeKeys.delete(keyCode);
+                        fingerStates[fingerIndex] = false;
+                        dispatchKeyEvent('keyup', keyCode);
+                        updateKeyIndicator(keyLabel, false);
+                        updateStatus(`Key ${keyLabel} released`);
+                    }
+                }
+            }
+        }
+        
+        // Dispatch keyboard event to Piano Genie
+        function dispatchKeyEvent(type, code) {
+            if (pianoGenieFrame && pianoGenieFrame.contentWindow) {
+                const event = new KeyboardEvent(type, {
+                    code: code,
+                    key: code === 'Semicolon' ? ';' : code.replace('Key', ''),
+                    bubbles: true,
+                    cancelable: true
+                });
+                
+                pianoGenieFrame.contentWindow.document.dispatchEvent(event);
+            }
+        }
+        
+        // Update key indicator visual state
+        function updateKeyIndicator(keyLabel, active) {
+            const indicator = document.querySelector(`[data-key="${keyLabel}"]`);
+            if (indicator) {
+                if (active) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('active');
+                }
+            }
+        }
+        
+        // Update status text
+        function updateStatus(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            statusText.innerHTML = `<span class="connection-dot ${connectionDot.classList.contains('connected') ? 'connected' : ''}"></span>[${timestamp}] ${message}`;
+        }
+        
+        // Test function for debugging
+        function testKey(key) {
+            const keyCode = `Key${key}`;
+            dispatchKeyEvent('keydown', keyCode);
+            updateKeyIndicator(key, true);
+            updateStatus(`Test: Key ${key} pressed`);
+            
+            setTimeout(() => {
+                dispatchKeyEvent('keyup', keyCode);
+                updateKeyIndicator(key, false);
+                updateStatus(`Test: Key ${key} released`);
+            }, 200);
+        }
+        
+        // Initialize
+        updateStatus('Bridge ready - click "Open Hand Tracking" to start');
+        console.log('🌉 Bridge ready! Waiting for gesture events...');
+    </script>
+</body>
+</html> 

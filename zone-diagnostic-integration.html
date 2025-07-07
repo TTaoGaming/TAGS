@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Zone Pinch Diagnostic Integration</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status-box {
+            background: rgba(0, 122, 255, 0.1);
+            border: 1px solid #007AFF;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .error-box {
+            background: rgba(255, 59, 48, 0.1);
+            border: 1px solid #FF3B30;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .success-box {
+            background: rgba(52, 199, 89, 0.1);
+            border: 1px solid #34C759;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .button:hover {
+            background: #0056CC;
+        }
+        .button.danger {
+            background: #FF3B30;
+        }
+        .button.danger:hover {
+            background: #CC2E24;
+        }
+        .button.success {
+            background: #34C759;
+        }
+        .button.success:hover {
+            background: #2A9D44;
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 3px solid #007AFF;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: white;
+        }
+        .diagnostic-controls {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Zone Pinch Diagnostic Integration</h1>
+        
+        <div class="status-box">
+            <h2>📊 Diagnostic Status</h2>
+            <div id="diagnosticStatus">Loading...</div>
+        </div>
+        
+        <div class="instructions">
+            <h2>🎯 How to Trace Zone 2 → Zone 1 Piano Genie Issue</h2>
+            
+            <div class="step">
+                <strong>Step 1:</strong> Load your main app below
+            </div>
+            
+            <div class="step">
+                <strong>Step 2:</strong> Click "Load Diagnostic System" to inject the tracer
+            </div>
+            
+            <div class="step">
+                <strong>Step 3:</strong> Click "Start Zone Trace" to begin monitoring
+            </div>
+            
+            <div class="step">
+                <strong>Step 4:</strong> Make a pinch gesture in Zone 2 (right side)
+            </div>
+            
+            <div class="step">
+                <strong>Step 5:</strong> Click "Stop Zone Trace" to analyze results
+            </div>
+            
+            <div class="step">
+                <strong>Step 6:</strong> Review the trace report for competing systems
+            </div>
+        </div>
+        
+        <div class="diagnostic-controls">
+            <h3>🔧 Diagnostic Controls</h3>
+            
+            <button class="button" onclick="loadMainApp()">📱 Load Main App</button>
+            <button class="button success" onclick="loadDiagnosticSystem()">🔍 Load Diagnostic System</button>
+            <button class="button" onclick="startZoneTrace()">▶️ Start Zone Trace</button>
+            <button class="button danger" onclick="stopZoneTrace()">⏹️ Stop Zone Trace</button>
+            <button class="button" onclick="showDiagnosticPanel()">📊 Show Diagnostic Panel</button>
+            
+            <div id="controlsStatus" style="margin-top: 10px; font-size: 14px; color: #8E8E93;">
+                Ready for main app loading...
+            </div>
+        </div>
+        
+        <div id="appContainer">
+            <iframe id="mainAppFrame" src="about:blank"></iframe>
+        </div>
+        
+        <div class="success-box" style="display: none;" id="successBox">
+            <h3>✅ Diagnostic System Loaded Successfully!</h3>
+            <p>The zone pinch diagnostic system is now active. Follow the steps above to trace your Zone 2 → Zone 1 issue.</p>
+            
+            <h4>🎯 What to Look For:</h4>
+            <ul>
+                <li><strong>Cross-Zone Contamination:</strong> Zone 1 events when you pinch in Zone 2</li>
+                <li><strong>Competing Systems:</strong> Multiple zone detection algorithms conflicting</li>
+                <li><strong>Piano Genie Routing:</strong> Events being routed to wrong zone</li>
+                <li><strong>Event Timing:</strong> Sequence of events showing the bug</li>
+            </ul>
+        </div>
+        
+        <div class="error-box" style="display: none;" id="errorBox">
+            <h3>❌ Integration Error</h3>
+            <p id="errorMessage">Failed to load diagnostic system.</p>
+        </div>
+    </div>
+
+    <script>
+        let mainAppFrame = null;
+        let diagnosticLoaded = false;
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('diagnosticStatus');
+            const controlsStatus = document.getElementById('controlsStatus');
+            
+            statusDiv.textContent = message;
+            controlsStatus.textContent = message;
+            
+            if (type === 'error') {
+                statusDiv.style.color = '#FF3B30';
+                controlsStatus.style.color = '#FF3B30';
+            } else if (type === 'success') {
+                statusDiv.style.color = '#34C759';
+                controlsStatus.style.color = '#34C759';
+            } else {
+                statusDiv.style.color = '#007AFF';
+                controlsStatus.style.color = '#8E8E93';
+            }
+        }
+        
+        function loadMainApp() {
+            mainAppFrame = document.getElementById('mainAppFrame');
+            mainAppFrame.src = './index-modular-monolith.html';
+            
+            updateStatus('Loading main app...', 'info');
+            
+            mainAppFrame.onload = function() {
+                updateStatus('Main app loaded - ready for diagnostic injection', 'success');
+            };
+            
+            mainAppFrame.onerror = function() {
+                updateStatus('Failed to load main app', 'error');
+                showError('Cannot load index-modular-monolith.html. Make sure the file exists.');
+            };
+        }
+        
+        function loadDiagnosticSystem() {
+            if (!mainAppFrame || !mainAppFrame.contentWindow) {
+                showError('Main app must be loaded first');
+                return;
+            }
+            
+            try {
+                // Load diagnostic script into main app
+                const script = mainAppFrame.contentDocument.createElement('script');
+                script.src = './zone-pinch-diagnostic.js';
+                script.onload = function() {
+                    diagnosticLoaded = true;
+                    updateStatus('Diagnostic system loaded successfully!', 'success');
+                    document.getElementById('successBox').style.display = 'block';
+                };
+                script.onerror = function() {
+                    showError('Failed to load zone-pinch-diagnostic.js');
+                };
+                
+                mainAppFrame.contentDocument.head.appendChild(script);
+                
+                updateStatus('Injecting diagnostic system...', 'info');
+                
+            } catch (error) {
+                showError('Cannot access main app frame: ' + error.message);
+            }
+        }
+        
+        function startZoneTrace() {
+            if (!diagnosticLoaded) {
+                showError('Diagnostic system must be loaded first');
+                return;
+            }
+            
+            try {
+                if (mainAppFrame.contentWindow.startZoneTrace) {
+                    mainAppFrame.contentWindow.startZoneTrace();
+                    updateStatus('Zone tracing started - make a pinch gesture in Zone 2', 'success');
+                } else {
+                    showError('Diagnostic functions not available');
+                }
+            } catch (error) {
+                showError('Cannot start zone trace: ' + error.message);
+            }
+        }
+        
+        function stopZoneTrace() {
+            if (!diagnosticLoaded) {
+                showError('Diagnostic system must be loaded first');
+                return;
+            }
+            
+            try {
+                if (mainAppFrame.contentWindow.stopZoneTrace) {
+                    mainAppFrame.contentWindow.stopZoneTrace();
+                    updateStatus('Zone tracing stopped - check results', 'info');
+                } else {
+                    showError('Diagnostic functions not available');
+                }
+            } catch (error) {
+                showError('Cannot stop zone trace: ' + error.message);
+            }
+        }
+        
+        function showDiagnosticPanel() {
+            if (!diagnosticLoaded) {
+                showError('Diagnostic system must be loaded first');
+                return;
+            }
+            
+            try {
+                if (mainAppFrame.contentWindow.showZoneDiagnostic) {
+                    mainAppFrame.contentWindow.showZoneDiagnostic();
+                    updateStatus('Diagnostic panel shown', 'success');
+                } else {
+                    showError('Diagnostic functions not available');
+                }
+            } catch (error) {
+                showError('Cannot show diagnostic panel: ' + error.message);
+            }
+        }
+        
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorBox').style.display = 'block';
+            updateStatus(message, 'error');
+        }
+        
+        // Initialize
+        updateStatus('Ready - click "Load Main App" to begin', 'info');
+    </script>
+</body>
+</html> 

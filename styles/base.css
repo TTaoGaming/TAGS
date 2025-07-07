@@ -1,0 +1,383 @@
+/*
+🤖 AAI DOCUMENTATION HEADER FOR AI CODING ASSISTANTS
+
+📄 FILE: styles/base.css  
+🎯 PURPOSE: Base styles and global utilities for Camera-MPE hand tracking interface
+📊 ARCHITECTURE: Foundation styles with touch optimization and feedback systems
+
+🎨 CORE FEATURES:
+- Dark theme foundation (#000 background, #fff text)
+- Touch-optimized body (overflow: hidden, touch-action: manipulation)
+- User-select disabled for musical interface interaction
+- GPU-accelerated feedback animation system
+- 📱 MOBILE VIDEO OPTIMIZATION: Apple HIG-compliant responsive video display
+
+🎛️ FEEDBACK ANIMATIONS:
+- .ui-feedback-success: Orange highlight for successful actions
+- .ui-feedback-highlight: Subtle border glow for focus states  
+- .ui-feedback-flash: Scale + background flash for important events
+- .ui-feedback-pulse: Keyframe pulse animation with shadow ring
+
+⚡ PERFORMANCE OPTIMIZATIONS:
+- Cubic-bezier easing (0.4, 0, 0.2, 1) for natural motion
+- GPU-accelerated transforms (scale, box-shadow)
+- Hardware acceleration via transform3d where needed
+- Minimal reflows/repaints with transform-only animations
+
+🔄 USAGE PATTERNS:
+- Apply feedback classes during user interactions
+- Remove after animation completes (0.3s duration)
+- Use for visual confirmation of state changes
+- Consistent with Apple HIG feedback principles
+
+📱 MOBILE VIDEO FEATURES:
+- Responsive aspect ratio containers
+- Safe area support for notched devices
+- Orientation-aware scaling
+- Apple HIG touch target compliance
+
+⚠️ FILE SIZE: Small foundation file - keep minimal and focused
+*/
+
+/* Camera-MPE Base Styles */
+/* Gesture Instrument - Glass-themed musical interface */
+
+body { 
+  margin: 0; 
+  font-family: Arial, sans-serif; 
+  background: #000; 
+  color: #fff; 
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  /* 📱 MOBILE SAFE AREA SUPPORT */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* 🎯 MOBILE FULLSCREEN MODE - Apple HIG Video Experience */
+body.mobile-fullscreen {
+  /* Remove safe area padding in fullscreen */
+  padding: 0 !important;
+  /* Hide any UI elements that might interfere */
+  overflow: hidden !important;
+  /* Ensure full viewport coverage */
+  width: 100vw !important;
+  height: 100vh !important;
+  /* Force hardware acceleration */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+body.mobile-fullscreen .handsfree-video {
+  /* 🎯 APPLE HIG: Full viewport video in landscape */
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  z-index: 1 !important;
+  /* Maintain mirroring for natural interaction */
+  transform: scaleX(-1) !important;
+  /* Remove any margins/padding */
+  margin: 0 !important;
+  padding: 0 !important;
+  /* 🎯 MID-RANGE SMARTPHONE OPTIMIZATION */
+  image-rendering: -webkit-optimize-contrast; /* Webkit browsers */
+  image-rendering: -webkit-crisp-edges; /* Edge support */
+  image-rendering: crisp-edges; /* Modern browsers */
+  /* Hardware acceleration for smooth performance */
+  will-change: transform !important;
+  /* Optimize rendering pipeline */
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  /* Force GPU layer for smooth scaling */
+  transform-style: preserve-3d !important;
+  -webkit-transform-style: preserve-3d !important;
+}
+
+/* 🎯 MOBILE FULLSCREEN LANDSCAPE OPTIMIZATION */
+@media screen and (orientation: landscape) {
+  body.mobile-fullscreen .handsfree-video {
+    /* Perfect landscape video coverage */
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover !important;
+    /* Center horizontally and vertically */
+    object-position: center center !important;
+    /* Remove iOS Safari video controls overlay */
+    -webkit-media-controls: none !important;
+    /* Prevent video from being too tall */
+    max-height: 100vh !important;
+    max-width: 100vw !important;
+  }
+}
+
+/* 🎯 MOBILE FULLSCREEN PORTRAIT FALLBACK */
+@media screen and (orientation: portrait) {
+  body.mobile-fullscreen .handsfree-video {
+    /* Portrait mode: fit to viewport width, crop height */
+    width: 100vw !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    /* Center vertically */
+    top: 50% !important;
+    transform: scaleX(-1) translateY(-50%) !important;
+  }
+}
+
+/* 🎯 HIDE OTHER UI ELEMENTS IN MOBILE FULLSCREEN */
+body.mobile-fullscreen .side-panel,
+body.mobile-fullscreen .panel-overlay,
+body.mobile-fullscreen .debug-indicator,
+body.mobile-fullscreen .handsfree-debugger,
+body.mobile-fullscreen .pinch-point {
+  /* Hide all UI except video in fullscreen */
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* 🎯 APPLE HIG: SIMPLE FULLSCREEN EXIT OVERLAY */
+body.mobile-fullscreen::before {
+  /* Invisible tap-to-exit overlay - Apple HIG standard */
+  content: "";
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9998 !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  /* Enable tap-to-exit on overlay */
+  pointer-events: auto !important;
+}
+
+/* 🎯 PROMINENT EXIT BUTTON - Always Visible */
+body.mobile-fullscreen .fullscreen-exit-overlay {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.fullscreen-exit-button {
+  /* Apple HIG: 44pt minimum touch target */
+  background: rgba(0, 0, 0, 0.8) !important;
+  border: 2px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 50% !important;
+  width: 50px !important;
+  height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: white !important;
+  font-size: 20px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  backdrop-filter: blur(10px) !important;
+  /* Ensure it's always clickable */
+  pointer-events: auto !important;
+  /* Add subtle glow for visibility */
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3) !important;
+}
+
+.fullscreen-exit-button:hover,
+.fullscreen-exit-button:active {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: #ffff00 !important;
+  color: #ffff00 !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 0 30px rgba(255, 255, 0, 0.5) !important;
+}
+
+.fullscreen-exit-hint {
+  /* Apple HIG: Clear instruction text */
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  border-radius: 20px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  /* Auto-hide after 3 seconds */
+  animation: fadeOutHint 3s ease-in-out forwards !important;
+}
+
+@keyframes fadeOutHint {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 📱 MOBILE VIDEO OPTIMIZATION - Apple HIG Compliant */
+
+/* Override HandsFree.js default video styles for mobile */
+.handsfree-video {
+  /* Desktop defaults (unchanged) */
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  transform: scaleX(-1) !important; /* Mirror for natural interaction */
+}
+
+/* Fix video visibility when side panel is hidden */
+.side-panel.hidden ~ .handsfree-video,
+.side-panel.hidden ~ * .handsfree-video {
+  z-index: 1001 !important; /* Higher than hidden side panel */
+}
+
+/* Mobile Portrait Optimization */
+@media (max-width: 768px) and (orientation: portrait) {
+  .handsfree-video {
+    width: 100vw !important;
+    height: auto !important;
+    max-height: 100vh !important;
+    object-fit: cover !important;
+    /* Center video vertically */
+    top: 50% !important;
+    transform: scaleX(-1) translateY(-50%) !important;
+  }
+  
+  /* Safe area adjustment for notched devices */
+  @supports (padding: max(0px)) {
+    .handsfree-video {
+      width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right)) !important;
+      height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+      left: env(safe-area-inset-left) !important;
+      top: calc(50% + env(safe-area-inset-top)) !important;
+    }
+  }
+}
+
+/* Mobile Landscape Optimization */
+@media (max-width: 1024px) and (orientation: landscape) {
+  .handsfree-video {
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover !important;
+    /* Maintain aspect ratio and center */
+    top: 0 !important;
+    transform: scaleX(-1) !important;
+  }
+  
+  /* Safe area adjustment for landscape notches */
+  @supports (padding: max(0px)) {
+    .handsfree-video {
+      width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right)) !important;
+      height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+      left: env(safe-area-inset-left) !important;
+      top: env(safe-area-inset-top) !important;
+    }
+  }
+}
+
+/* Small Mobile Devices (iPhone SE, etc.) */
+@media (max-width: 480px) {
+  .handsfree-video {
+    /* Optimize for smaller screens */
+    object-fit: cover !important;
+    object-position: center center !important;
+  }
+  
+  /* Ensure minimum usable video area */
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available; /* iOS Safari fix */
+  }
+}
+
+/* Large Mobile/Tablet Portrait */
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+  .handsfree-video {
+    /* Tablet-specific optimizations */
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    object-fit: contain !important; /* Show full video on tablets */
+  }
+}
+
+/* Canvas Optimization for Mobile */
+.handsfree-canvas {
+  /* Ensure canvases scale with video */
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+}
+
+@media (max-width: 768px) {
+  .handsfree-canvas {
+    /* Mobile canvas scaling */
+    width: 100vw !important;
+    height: auto !important;
+    object-fit: cover !important;
+  }
+}
+
+/* Debug Overlay Mobile Optimization */
+.handsfree-debugger {
+  /* Ensure debug overlays are visible on mobile */
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+}
+
+@media (max-width: 768px) {
+  .handsfree-debugger {
+    /* Mobile debug overlay */
+    position: fixed !important;
+    top: env(safe-area-inset-top, 0) !important;
+    left: env(safe-area-inset-left, 0) !important;
+    right: env(safe-area-inset-right, 0) !important;
+    bottom: env(safe-area-inset-bottom, 0) !important;
+  }
+}
+
+/* UI Feedback Animation System - GPU Accelerated */
+
+.ui-feedback-success {
+  border-color: rgba(255, 179, 71, 0.8) !important;
+  background: rgba(255, 179, 71, 0.1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ui-feedback-highlight {
+  border-color: rgba(255, 179, 71, 0.6) !important;
+  transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ui-feedback-flash {
+  background: rgba(255, 179, 71, 0.2) !important;
+  transform: scale(1.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ui-feedback-pulse {
+  animation: ui-pulse 0.6s ease-out;
+}
+
+@keyframes ui-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 179, 71, 0.7); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 179, 71, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 179, 71, 0); }
+}
+
+/* Smooth transitions for interactive elements (legacy components only) */
+.glass-btn, .control-group, .frame-option {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+} 

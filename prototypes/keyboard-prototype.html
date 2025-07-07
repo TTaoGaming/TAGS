@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⌨️ Gesture Keyboard Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: rgba(0,0,0,0.3);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+        }
+        
+        .main-content {
+            height: calc(100vh - 140px);
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        .left-panel, .right-panel {
+            flex: 1;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .gesture-mapping {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .hand-section {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .hand-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .finger-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .finger-item.active {
+            background: #4CAF50;
+            transform: scale(1.05);
+        }
+        
+        .keyboard-visual {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .key-visual {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+        
+        .key-visual.active {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            transform: scale(1.1);
+        }
+        
+        .test-input {
+            width: 100%;
+            height: 120px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            padding: 10px;
+            color: white;
+            font-size: 16px;
+            resize: none;
+        }
+        
+        .status-panel {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            height: 80px;
+        }
+        
+        .connection-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #ff4444;
+            transition: background 0.3s ease;
+        }
+        
+        .connection-dot.connected {
+            background: #4CAF50;
+        }
+        
+        .key-select {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+            min-width: 80px;
+        }
+        
+        .key-select option {
+            background: #333;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">⌨️ Gesture Keyboard Prototype</div>
+        <div>
+            <button class="btn" onclick="openHandTrackingApp()">🤚 Open Hand Tracking</button>
+            <button class="btn" onclick="testAllKeys()">🧪 Test Keys</button>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="left-panel">
+            <div class="panel-title">🤚 Gesture Mapping</div>
+            
+            <div class="gesture-mapping">
+                <div class="hand-section">
+                    <div class="hand-title">👈 Left Hand</div>
+                    <div class="finger-item" data-finger="0-0">
+                        <span>Index</span>
+                        <select class="key-select" data-finger="0-0">
+                            <option value="ArrowUp">↑ Up</option>
+                            <option value="ArrowDown">↓ Down</option>
+                            <option value="ArrowLeft">← Left</option>
+                            <option value="ArrowRight">→ Right</option>
+                            <option value="KeyW">W</option>
+                            <option value="KeyA">A</option>
+                            <option value="KeyS">S</option>
+                            <option value="KeyD">D</option>
+                            <option value="Space">Space</option>
+                            <option value="Enter">Enter</option>
+                            <option value="Escape">Esc</option>
+                            <option value="Tab">Tab</option>
+                        </select>
+                    </div>
+                    <div class="finger-item" data-finger="0-1">
+                        <span>Middle</span>
+                        <select class="key-select" data-finger="0-1">
+                            <option value="ArrowUp">↑ Up</option>
+                            <option value="ArrowDown" selected>↓ Down</option>
+                            <option value="ArrowLeft">← Left</option>
+                            <option value="ArrowRight">→ Right</option>
+                            <option value="KeyW">W</option>
+                            <option value="KeyA">A</option>
+                            <option value="KeyS">S</option>
+                            <option value="KeyD">D</option>
+                            <option value="Space">Space</option>
+                            <option value="Enter">Enter</option>
+                            <option value="Escape">Esc</option>
+                            <option value="Tab">Tab</option>
+                        </select>
+                    </div>
+                    <div class="finger-item" data-finger="0-2">
+                        <span>Ring</span>
+                        <select class="key-select" data-finger="0-2">
+                            <option value="ArrowUp">↑ Up</option>
+                            <option value="ArrowDown">↓ Down</option>
+                            <option value="ArrowLeft" selected>← Left</option>
+                            <option value="ArrowRight">→ Right</option>
+                            <option value="KeyW">W</option>
+                            <option value="KeyA">A</option>
+                            <option value="KeyS">S</option>
+                            <option value="KeyD">D</option>
+                            <option value="Space">Space</option>
+                            <option value="Enter">Enter</option>
+                            <option value="Escape">Esc</option>
+                            <option value="Tab">Tab</option>
+                        </select>
+                    </div>
+                    <div class="finger-item" data-finger="0-3">
+                        <span>Pinky</span>
+                        <select class="key-select" data-finger="0-3">
+                            <option value="ArrowUp">↑ Up</option>
+                            <option value="ArrowDown">↓ Down</option>
+                            <option value="ArrowLeft">← Left</option>
+                            <option value="ArrowRight" selected>→ Right</option>
+                            <option value="KeyW">W</option>
+                            <option value="KeyA">A</option>
+                            <option value="KeyS">S</option>
+                            <option value="KeyD">D</option>
+                            <option value="Space">Space</option>
+                            <option value="Enter">Enter</option>
+                            <option value="Escape">Esc</option>
+                            <option value="Tab">Tab</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="hand-section">
+                    <div class="hand-title">👉 Right Hand</div>
+                    <div class="finger-item" data-finger="1-0">
+                        <span>Index</span>
+                        <select class="key-select" data-finger="1-0">
+                            <option value="ArrowUp">↑ Up</option>
+                            <option value="ArrowDown">↓ Down</option>
+                            <option value="ArrowLeft">← Left</option>
+                            <option value="ArrowRight">→ Right</option>
+                            <option value="KeyW" selected>W</option>
+                            <option value="KeyA">A</option>
+                            <option value="KeyS">S</option>
+                            <option value="KeyD">D</option>
+                            <option value="Space">Space</option>
+                            <option value="Enter">Enter</option>
+                            <option value="Escape">Esc</option>
+                            <option value="Tab">Tab</option>
+                        </select>
+                    </div>
+                    <div class="finger-item" data-finger="1-1">
+                        <span>Middle</span>
+                        <select class="key-select" data-finger="1-1">
+                            <option value="ArrowUp">↑ Up</option>
+                            <option value="ArrowDown">↓ Down</option>
+                            <option value="ArrowLeft">← Left</option>
+                            <option value="ArrowRight">→ Right</option>
+                            <option value="KeyW">W</option>
+                            <option value="KeyA">A</option>
+                            <option value="KeyS" selected>S</option>
+                            <option value="KeyD">D</option>
+                            <option value="Space">Space</option>
+                            <option value="Enter">Enter</option>
+                            <option value="Escape">Esc</option>
+                            <option value="Tab">Tab</option>
+                        </select>
+                    </div>
+                    <div class="finger-item" data-finger="1-2">
+                        <span>Ring</span>
+                        <select class="key-select" data-finger="1-2">
+                            <option value="ArrowUp">↑ Up</option>
+                            <option value="ArrowDown">↓ Down</option>
+                            <option value="ArrowLeft">← Left</option>
+                            <option value="ArrowRight">→ Right</option>
+                            <option value="KeyW">W</option>
+                            <option value="KeyA" selected>A</option>
+                            <option value="KeyS">S</option>
+                            <option value="KeyD">D</option>
+                            <option value="Space">Space</option>
+                            <option value="Enter">Enter</option>
+                            <option value="Escape">Esc</option>
+                            <option value="Tab">Tab</option>
+                        </select>
+                    </div>
+                    <div class="finger-item" data-finger="1-3">
+                        <span>Pinky</span>
+                        <select class="key-select" data-finger="1-3">
+                            <option value="ArrowUp">↑ Up</option>
+                            <option value="ArrowDown">↓ Down</option>
+                            <option value="ArrowLeft">← Left</option>
+                            <option value="ArrowRight">→ Right</option>
+                            <option value="KeyW">W</option>
+                            <option value="KeyA">A</option>
+                            <option value="KeyS">S</option>
+                            <option value="KeyD" selected>D</option>
+                            <option value="Space">Space</option>
+                            <option value="Enter">Enter</option>
+                            <option value="Escape">Esc</option>
+                            <option value="Tab">Tab</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="panel-title">⌨️ Keyboard Output</div>
+            
+            <div class="keyboard-visual">
+                <div class="key-visual" data-key="ArrowUp">↑</div>
+                <div class="key-visual" data-key="KeyW">W</div>
+                <div class="key-visual" data-key="ArrowLeft">←</div>
+                <div class="key-visual" data-key="KeyA">A</div>
+                <div class="key-visual" data-key="ArrowDown">↓</div>
+                <div class="key-visual" data-key="KeyS">S</div>
+                <div class="key-visual" data-key="ArrowRight">→</div>
+                <div class="key-visual" data-key="KeyD">D</div>
+            </div>
+            
+            <div style="margin-bottom: 10px; font-weight: bold;">Test Area - Click and use gestures:</div>
+            <textarea class="test-input" placeholder="Click here and use your gestures! Arrow keys for navigation, WASD for gaming..."></textarea>
+        </div>
+    </div>
+    
+    <div class="status-panel">
+        <div style="margin-bottom: 8px;">
+            <span class="connection-dot" id="connectionDot"></span>
+            <span id="connectionStatus">Click "Open Hand Tracking" to start</span>
+        </div>
+        <div>
+            <strong>Last Event:</strong> <span id="lastEvent">None</span>
+        </div>
+    </div>
+
+    <script>
+        console.log('⌨️ Gesture Keyboard Prototype loaded');
+        
+        // Dynamic gesture to key mapping (updated from dropdowns)
+        let GESTURE_TO_KEY = {
+            '0-0': 'ArrowUp',    // Left Index → Up Arrow
+            '0-1': 'ArrowDown',  // Left Middle → Down Arrow
+            '0-2': 'ArrowLeft',  // Left Ring → Left Arrow
+            '0-3': 'ArrowRight', // Left Pinky → Right Arrow
+            '1-0': 'KeyW',       // Right Index → W
+            '1-1': 'KeyS',       // Right Middle → S
+            '1-2': 'KeyA',       // Right Ring → A
+            '1-3': 'KeyD'        // Right Pinky → D
+        };
+        
+        // Update mapping from dropdown selections
+        function updateMappingFromDropdowns() {
+            document.querySelectorAll('.key-select').forEach(select => {
+                const finger = select.dataset.finger;
+                GESTURE_TO_KEY[finger] = select.value;
+            });
+            updateKeyboardVisual();
+            console.log('🔄 Updated mapping:', GESTURE_TO_KEY);
+        }
+        
+        const KEY_DISPLAY = {
+            'ArrowUp': '↑', 'ArrowDown': '↓', 'ArrowLeft': '←', 'ArrowRight': '→',
+            'KeyW': 'W', 'KeyS': 'S', 'KeyA': 'A', 'KeyD': 'D',
+            'Space': 'Space', 'Enter': 'Enter', 'Escape': 'Esc', 'Tab': 'Tab'
+        };
+        
+        // Update keyboard visual based on current mapping
+        function updateKeyboardVisual() {
+            const keyVisuals = document.querySelectorAll('.key-visual');
+            const currentKeys = Object.values(GESTURE_TO_KEY);
+            
+            // Clear all visuals first
+            keyVisuals.forEach(visual => {
+                visual.style.display = 'none';
+            });
+            
+            // Show only mapped keys
+            currentKeys.forEach((keyCode, index) => {
+                if (index < keyVisuals.length) {
+                    const visual = keyVisuals[index];
+                    visual.dataset.key = keyCode;
+                    visual.textContent = KEY_DISPLAY[keyCode] || keyCode.replace('Key', '');
+                    visual.style.display = 'flex';
+                }
+            });
+        }
+        
+        const activeKeys = new Set();
+        let handTrackingWindow = null;
+        
+        const connectionDot = document.getElementById('connectionDot');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const lastEvent = document.getElementById('lastEvent');
+        const testInput = document.querySelector('.test-input');
+        
+        function openHandTrackingApp() {
+            handTrackingWindow = window.open('../index-modular-monolith.html', 'handTracking', 
+                'width=800,height=600,resizable=yes,scrollbars=yes');
+            
+            if (handTrackingWindow) {
+                connectionStatus.textContent = 'Hand tracking app opening...';
+            } else {
+                connectionStatus.textContent = 'Failed to open - check popup blocker';
+            }
+        }
+        
+        // Listen for bridge events
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'gesture-keyboard') {
+                handleGestureEvent(event.data);
+            }
+        });
+        
+        function handleGestureEvent(data) {
+            connectionDot.classList.add('connected');
+            connectionStatus.textContent = 'Connected - receiving gestures';
+            
+            if (data.eventType === 'pinch') {
+                const gestureKey = `${data.data.hand}-${data.data.finger}`;
+                const keyCode = GESTURE_TO_KEY[gestureKey];
+                
+                if (keyCode) {
+                    if (data.data.isPinched) {
+                        if (!activeKeys.has(keyCode)) {
+                            activeKeys.add(keyCode);
+                            activateKey(keyCode, true);
+                            dispatchKeyEvent('keydown', keyCode);
+                            lastEvent.textContent = `${KEY_DISPLAY[keyCode]} pressed`;
+                        }
+                    } else {
+                        if (activeKeys.has(keyCode)) {
+                            activeKeys.delete(keyCode);
+                            activateKey(keyCode, false);
+                            dispatchKeyEvent('keyup', keyCode);
+                            lastEvent.textContent = `${KEY_DISPLAY[keyCode]} released`;
+                        }
+                    }
+                }
+            }
+        }
+        
+        function activateKey(keyCode, active) {
+            // Visual feedback
+            const keyVisual = document.querySelector(`[data-key="${keyCode}"]`);
+            const gestureKey = Object.keys(GESTURE_TO_KEY).find(k => GESTURE_TO_KEY[k] === keyCode);
+            const fingerItem = document.querySelector(`[data-finger="${gestureKey}"]`);
+            
+            if (active) {
+                keyVisual?.classList.add('active');
+                fingerItem?.classList.add('active');
+            } else {
+                keyVisual?.classList.remove('active');
+                fingerItem?.classList.remove('active');
+            }
+        }
+        
+        function dispatchKeyEvent(type, code) {
+            const event = new KeyboardEvent(type, {
+                code: code,
+                key: getKeyFromCode(code),
+                bubbles: true,
+                cancelable: true
+            });
+            
+            (document.activeElement || testInput).dispatchEvent(event);
+        }
+        
+        function getKeyFromCode(code) {
+            const keyMap = {
+                'ArrowUp': 'ArrowUp', 'ArrowDown': 'ArrowDown', 
+                'ArrowLeft': 'ArrowLeft', 'ArrowRight': 'ArrowRight',
+                'KeyW': 'w', 'KeyS': 's', 'KeyA': 'a', 'KeyD': 'd'
+            };
+            return keyMap[code] || code.replace('Key', '').toLowerCase();
+        }
+        
+        function testAllKeys() {
+            const keys = Object.values(GESTURE_TO_KEY);
+            let index = 0;
+            
+            function testNext() {
+                if (index < keys.length) {
+                    const keyCode = keys[index];
+                    activateKey(keyCode, true);
+                    lastEvent.textContent = `Test: ${KEY_DISPLAY[keyCode]}`;
+                    
+                    setTimeout(() => {
+                        activateKey(keyCode, false);
+                        index++;
+                        setTimeout(testNext, 200);
+                    }, 300);
+                }
+            }
+            testNext();
+        }
+        
+        // Add event listeners to dropdowns
+        document.querySelectorAll('.key-select').forEach(select => {
+            select.addEventListener('change', updateMappingFromDropdowns);
+        });
+        
+        // Initialize keyboard visual
+        updateKeyboardVisual();
+        
+        testInput.focus();
+        console.log('⌨️ Ready for gesture input with custom mapping!');
+    </script>
+</body>
+</html> 

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Spatial Zone Visual Prototypes - TAGS MVP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .header {
+            padding: 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .prototype-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            padding: 0 20px;
+            margin-bottom: 50px;
+        }
+
+        .prototype-card {
+            background: #2a2a2a;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #444;
+            transition: all 0.3s ease;
+        }
+
+        .prototype-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .prototype-header {
+            padding: 15px 20px;
+            background: #333;
+            border-bottom: 1px solid #444;
+        }
+
+        .prototype-title {
+            font-size: 18px;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .prototype-description {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .prototype-canvas-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: #1e1e1e;
+            overflow: hidden;
+        }
+
+        .prototype-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .prototype-controls {
+            padding: 15px 20px;
+            background: #2a2a2a;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-button {
+            background: #667eea;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .control-button.active {
+            background: #4ecdc4;
+        }
+
+        .info-panel {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 0 20px 30px;
+            border: 1px solid #444;
+        }
+
+        .info-title {
+            color: #4ecdc4;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            background: #333;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #ffffff;
+        }
+
+        /* Zone visualization classes for each style */
+        .zone-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .mouse-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #ffff00;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            transition: all 0.1s ease;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 10px rgba(255, 255, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 Spatial Zone Visual Prototypes</h1>
+        <p>Move your mouse over each prototype to see how zone visualization works. Choose your preferred style!</p>
+    </div>
+
+    <div class="info-panel">
+        <div class="info-title">🎯 Live Zone Detection</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Current Zone</div>
+                <div class="info-value" id="currentZone">Zone 1 (Left)</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Mouse Position</div>
+                <div class="info-value" id="mousePosition">X: 0.00, Y: 0.00</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Zone Transitions</div>
+                <div class="info-value" id="transitionCount">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Recommended Style</div>
+                <div class="info-value" id="recommendedStyle">Testing...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="prototype-grid">
+        <!-- Style A: Simple Vertical Split Line -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <div class="prototype-title">Style A: Simple Split Line</div>
+                <div class="prototype-description">Minimal vertical line at screen center. Clean, unobtrusive, clear boundary.</div>
+            </div>
+            <div class="prototype-canvas-container">
+                <canvas class="prototype-canvas" id="canvasA" width="400" height="300"></canvas>
+                <div class="mouse-indicator" id="mouseA"></div>
+            </div>
+            <div class="prototype-controls">
+                <button class="control-button active" onclick="updateStyleA('solid')">Solid Line</button>
+                <button class="control-button" onclick="updateStyleA('dashed')">Dashed Line</button>
+                <button class="control-button" onclick="updateStyleA('dotted')">Dotted Line</button>
+            </div>
+        </div>
+
+        <!-- Style B: Colored Zone Overlays -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <div class="prototype-title">Style B: Colored Overlays</div>
+                <div class="prototype-description">Semi-transparent colored zones. Clear visual separation, immersive feedback.</div>
+            </div>
+            <div class="prototype-canvas-container">
+                <canvas class="prototype-canvas" id="canvasB" width="400" height="300"></canvas>
+                <div class="mouse-indicator" id="mouseB"></div>
+            </div>
+            <div class="prototype-controls">
+                <button class="control-button active" onclick="updateStyleB(0.2)">20% Opacity</button>
+                <button class="control-button" onclick="updateStyleB(0.3)">30% Opacity</button>
+                <button class="control-button" onclick="updateStyleB(0.4)">40% Opacity</button>
+            </div>
+        </div>
+
+        <!-- Style C: Gradient Zones -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <div class="prototype-title">Style C: Gradient Zones</div>
+                <div class="prototype-description">Subtle gradient transitions. Professional look, smooth zone boundaries.</div>
+            </div>
+            <div class="prototype-canvas-container">
+                <canvas class="prototype-canvas" id="canvasC" width="400" height="300"></canvas>
+                <div class="mouse-indicator" id="mouseC"></div>
+            </div>
+            <div class="prototype-controls">
+                <button class="control-button active" onclick="updateStyleC('horizontal')">Horizontal</button>
+                <button class="control-button" onclick="updateStyleC('radial')">Radial</button>
+                <button class="control-button" onclick="updateStyleC('diagonal')">Diagonal</button>
+            </div>
+        </div>
+
+        <!-- Style D: Border Highlights -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <div class="prototype-title">Style D: Active Zone Borders</div>
+                <div class="prototype-description">Highlights only the active zone with glowing borders. Minimal until needed.</div>
+            </div>
+            <div class="prototype-canvas-container">
+                <canvas class="prototype-canvas" id="canvasD" width="400" height="300"></canvas>
+                <div class="mouse-indicator" id="mouseD"></div>
+            </div>
+            <div class="prototype-controls">
+                <button class="control-button active" onclick="updateStyleD('glow')">Glow Effect</button>
+                <button class="control-button" onclick="updateStyleD('solid')">Solid Border</button>
+                <button class="control-button" onclick="updateStyleD('pulse')">Pulsing</button>
+            </div>
+        </div>
+
+        <!-- Style E: Geometric Patterns -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <div class="prototype-title">Style E: Geometric Patterns</div>
+                <div class="prototype-description">Modern geometric shapes and patterns. Engaging, gamelike visual feedback.</div>
+            </div>
+            <div class="prototype-canvas-container">
+                <canvas class="prototype-canvas" id="canvasE" width="400" height="300"></canvas>
+                <div class="mouse-indicator" id="mouseE"></div>
+            </div>
+            <div class="prototype-controls">
+                <button class="control-button active" onclick="updateStyleE('grid')">Grid Pattern</button>
+                <button class="control-button" onclick="updateStyleE('hexagon')">Hexagons</button>
+                <button class="control-button" onclick="updateStyleE('circles')">Circles</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel">
+        <div class="info-title">💡 Style Recommendations</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Best for Performance</div>
+                <div class="info-value">Style A (Split Line) - Minimal GPU impact</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Best for Clarity</div>
+                <div class="info-value">Style B (Overlays) - Clear visual separation</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Best for Professionals</div>
+                <div class="info-value">Style C (Gradients) - Subtle, non-distracting</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Best for Gaming</div>
+                <div class="info-value">Style E (Patterns) - Engaging, modern</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentZone = 'zone-left';
+        let transitionCount = 0;
+        let stylePreferences = {
+            A: { lineStyle: 'solid' },
+            B: { opacity: 0.2 },
+            C: { gradientType: 'horizontal' },
+            D: { borderEffect: 'glow' },
+            E: { pattern: 'grid' }
+        };
+
+        // Zone colors
+        const ZONE_COLORS = {
+            left: '#ff6b6b',   // Red
+            right: '#4ecdc4'   // Teal
+        };
+
+        // Initialize all canvases
+        const canvases = ['A', 'B', 'C', 'D', 'E'];
+        const contexts = {};
+
+        canvases.forEach(id => {
+            const canvas = document.getElementById(`canvas${id}`);
+            contexts[id] = canvas.getContext('2d');
+            
+            // Add mouse move listener
+            canvas.addEventListener('mousemove', (e) => updateMousePosition(e, id));
+            canvas.addEventListener('mouseleave', () => hideMouseIndicator(id));
+        });
+
+        function updateMousePosition(event, canvasId) {
+            const canvas = event.target;
+            const rect = canvas.getBoundingClientRect();
+            const x = (event.clientX - rect.left) / rect.width;
+            const y = (event.clientY - rect.top) / rect.height;
+            
+            // Update mouse indicator
+            const mouseIndicator = document.getElementById(`mouse${canvasId}`);
+            mouseIndicator.style.left = `${x * 100}%`;
+            mouseIndicator.style.top = `${y * 100}%`;
+            mouseIndicator.style.display = 'block';
+            
+            // Update zone detection
+            const newZone = x < 0.5 ? 'zone-left' : 'zone-right';
+            if (newZone !== currentZone) {
+                currentZone = newZone;
+                transitionCount++;
+                updateInfoDisplay();
+            }
+            
+            // Update position display
+            document.getElementById('mousePosition').textContent = `X: ${x.toFixed(2)}, Y: ${y.toFixed(2)}`;
+            
+            // Redraw the specific canvas
+            drawStyle(canvasId);
+        }
+
+        function hideMouseIndicator(canvasId) {
+            const mouseIndicator = document.getElementById(`mouse${canvasId}`);
+            mouseIndicator.style.display = 'none';
+        }
+
+        function updateInfoDisplay() {
+            const zoneName = currentZone === 'zone-left' ? 'Zone 1 (Left)' : 'Zone 2 (Right)';
+            document.getElementById('currentZone').textContent = zoneName;
+            document.getElementById('transitionCount').textContent = transitionCount;
+            
+            // Update recommendation based on usage
+            let recommendation = 'Testing...';
+            if (transitionCount > 10) {
+                recommendation = 'Style B (Clear boundaries help with frequent transitions)';
+            } else if (transitionCount > 5) {
+                recommendation = 'Style A (Simple and effective)';
+            }
+            document.getElementById('recommendedStyle').textContent = recommendation;
+        }
+
+        // Style A: Simple Split Line
+        function drawStyleA() {
+            const ctx = contexts.A;
+            const canvas = ctx.canvas;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw zone labels
+            ctx.font = '16px Arial';
+            ctx.fillStyle = ZONE_COLORS.left;
+            ctx.fillText('Zone 1 (Left)', 20, 30);
+            
+            ctx.fillStyle = ZONE_COLORS.right;
+            ctx.fillText('Zone 2 (Right)', canvas.width - 120, 30);
+            
+            // Draw split line
+            const centerX = canvas.width / 2;
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 3;
+            
+            if (stylePreferences.A.lineStyle === 'dashed') {
+                ctx.setLineDash([10, 5]);
+            } else if (stylePreferences.A.lineStyle === 'dotted') {
+                ctx.setLineDash([2, 8]);
+            } else {
+                ctx.setLineDash([]);
+            }
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+        }
+
+        // Style B: Colored Overlays
+        function drawStyleB() {
+            const ctx = contexts.B;
+            const canvas = ctx.canvas;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const opacity = stylePreferences.B.opacity;
+            
+            // Left zone overlay
+            ctx.fillStyle = `${ZONE_COLORS.left}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`;
+            ctx.fillRect(0, 0, centerX, canvas.height);
+            
+            // Right zone overlay
+            ctx.fillStyle = `${ZONE_COLORS.right}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`;
+            ctx.fillRect(centerX, 0, centerX, canvas.height);
+            
+            // Zone labels
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('Zone 1', 20, 30);
+            ctx.fillText('Zone 2', canvas.width - 70, 30);
+        }
+
+        // Style C: Gradient Zones
+        function drawStyleC() {
+            const ctx = contexts.C;
+            const canvas = ctx.canvas;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            let gradient;
+            const gradientType = stylePreferences.C.gradientType;
+            
+            if (gradientType === 'horizontal') {
+                gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+            } else if (gradientType === 'radial') {
+                gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width/2);
+            } else { // diagonal
+                gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            }
+            
+            gradient.addColorStop(0, `${ZONE_COLORS.left}40`);
+            gradient.addColorStop(0.5, '#ffffff10');
+            gradient.addColorStop(1, `${ZONE_COLORS.right}40`);
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Zone labels
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('Zone 1', 20, 30);
+            ctx.fillText('Zone 2', canvas.width - 70, 30);
+        }
+
+        // Style D: Border Highlights
+        function drawStyleD() {
+            const ctx = contexts.D;
+            const canvas = ctx.canvas;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const isLeftZone = currentZone === 'zone-left';
+            const borderEffect = stylePreferences.D.borderEffect;
+            
+            if (isLeftZone) {
+                // Highlight left zone
+                ctx.strokeStyle = ZONE_COLORS.left;
+                if (borderEffect === 'glow') {
+                    ctx.shadowColor = ZONE_COLORS.left;
+                    ctx.shadowBlur = 20;
+                }
+                ctx.lineWidth = borderEffect === 'solid' ? 4 : 6;
+                ctx.strokeRect(5, 5, centerX - 10, canvas.height - 10);
+            } else {
+                // Highlight right zone
+                ctx.strokeStyle = ZONE_COLORS.right;
+                if (borderEffect === 'glow') {
+                    ctx.shadowColor = ZONE_COLORS.right;
+                    ctx.shadowBlur = 20;
+                }
+                ctx.lineWidth = borderEffect === 'solid' ? 4 : 6;
+                ctx.strokeRect(centerX + 5, 5, centerX - 10, canvas.height - 10);
+            }
+            
+            // Reset shadow
+            ctx.shadowBlur = 0;
+            
+            // Zone labels
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('Zone 1', 20, 30);
+            ctx.fillText('Zone 2', canvas.width - 70, 30);
+        }
+
+        // Style E: Geometric Patterns
+        function drawStyleE() {
+            const ctx = contexts.E;
+            const canvas = ctx.canvas;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const pattern = stylePreferences.E.pattern;
+            
+            if (pattern === 'grid') {
+                drawGridPattern(ctx, 0, 0, centerX, canvas.height, ZONE_COLORS.left);
+                drawGridPattern(ctx, centerX, 0, centerX, canvas.height, ZONE_COLORS.right);
+            } else if (pattern === 'hexagon') {
+                drawHexagonPattern(ctx, 0, 0, centerX, canvas.height, ZONE_COLORS.left);
+                drawHexagonPattern(ctx, centerX, 0, centerX, canvas.height, ZONE_COLORS.right);
+            } else { // circles
+                drawCirclePattern(ctx, 0, 0, centerX, canvas.height, ZONE_COLORS.left);
+                drawCirclePattern(ctx, centerX, 0, centerX, canvas.height, ZONE_COLORS.right);
+            }
+            
+            // Zone labels
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('Zone 1', 20, 30);
+            ctx.fillText('Zone 2', canvas.width - 70, 30);
+        }
+
+        function drawGridPattern(ctx, x, y, width, height, color) {
+            ctx.strokeStyle = `${color}40`;
+            ctx.lineWidth = 1;
+            
+            const gridSize = 30;
+            for (let i = x; i <= x + width; i += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(i, y);
+                ctx.lineTo(i, y + height);
+                ctx.stroke();
+            }
+            for (let j = y; j <= y + height; j += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, j);
+                ctx.lineTo(x + width, j);
+                ctx.stroke();
+            }
+        }
+
+        function drawHexagonPattern(ctx, x, y, width, height, color) {
+            ctx.strokeStyle = `${color}60`;
+            ctx.lineWidth = 2;
+            
+            const hexSize = 25;
+            for (let i = 0; i < width; i += hexSize * 1.5) {
+                for (let j = 0; j < height; j += hexSize * Math.sqrt(3)) {
+                    const offsetX = (j % (hexSize * Math.sqrt(3) * 2)) < hexSize * Math.sqrt(3) ? 0 : hexSize * 0.75;
+                    drawHexagon(ctx, x + i + offsetX, y + j, hexSize * 0.8);
+                }
+            }
+        }
+
+        function drawHexagon(ctx, centerX, centerY, radius) {
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const angle = (i * Math.PI) / 3;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function drawCirclePattern(ctx, x, y, width, height, color) {
+            ctx.strokeStyle = `${color}50`;
+            ctx.lineWidth = 2;
+            
+            const circleSize = 20;
+            for (let i = circleSize; i < width; i += circleSize * 2) {
+                for (let j = circleSize; j < height; j += circleSize * 2) {
+                    ctx.beginPath();
+                    ctx.arc(x + i, y + j, circleSize * 0.7, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Draw function dispatcher
+        function drawStyle(styleId) {
+            switch(styleId) {
+                case 'A': drawStyleA(); break;
+                case 'B': drawStyleB(); break;
+                case 'C': drawStyleC(); break;
+                case 'D': drawStyleD(); break;
+                case 'E': drawStyleE(); break;
+            }
+        }
+
+        // Control functions
+        function updateStyleA(lineStyle) {
+            stylePreferences.A.lineStyle = lineStyle;
+            drawStyleA();
+            updateButtonStates('A', lineStyle);
+        }
+
+        function updateStyleB(opacity) {
+            stylePreferences.B.opacity = opacity;
+            drawStyleB();
+            updateButtonStates('B', opacity);
+        }
+
+        function updateStyleC(gradientType) {
+            stylePreferences.C.gradientType = gradientType;
+            drawStyleC();
+            updateButtonStates('C', gradientType);
+        }
+
+        function updateStyleD(borderEffect) {
+            stylePreferences.D.borderEffect = borderEffect;
+            drawStyleD();
+            updateButtonStates('D', borderEffect);
+        }
+
+        function updateStyleE(pattern) {
+            stylePreferences.E.pattern = pattern;
+            drawStyleE();
+            updateButtonStates('E', pattern);
+        }
+
+        function updateButtonStates(styleId, activeValue) {
+            const card = document.querySelector(`#canvas${styleId}`).closest('.prototype-card');
+            const buttons = card.querySelectorAll('.control-button');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase().includes(activeValue.toString().toLowerCase())) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // Initial draw
+        canvases.forEach(id => drawStyle(id));
+        updateInfoDisplay();
+
+        // Console logging for testing
+        console.log('🎨 Zone Visual Prototypes Loaded');
+        console.log('🎯 Move mouse over prototypes to test zone detection');
+        console.log('📊 Current preferences:', stylePreferences);
+    </script>
+</body>
+</html> 

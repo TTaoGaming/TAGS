@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaPipe Camera Pipeline Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            height: calc(100vh - 140px);
+        }
+
+        .video-section {
+            flex: 2;
+            position: relative;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        #videoElement {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        #canvasElement {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: #000;
+        }
+
+        .controls-section {
+            flex: 1;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group h3 {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .control-item {
+            margin-bottom: 15px;
+        }
+
+        .control-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.loading {
+            background: #ffa500;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-indicator.ready {
+            background: #4caf50;
+        }
+
+        .status-indicator.error {
+            background: #f44336;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .metrics {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .metrics-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,0.3);
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4caf50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+    </style>
+    
+    <!-- MediaPipe CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 MediaPipe Camera Pipeline</h1>
+            <p>Real-time hand tracking with advanced media processing</p>
+        </div>
+
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <video id="videoElement" autoplay muted playsinline></video>
+                    <canvas id="canvasElement"></canvas>
+                    
+                    <div id="loadingScreen" class="loading-screen">
+                        <div class="spinner"></div>
+                        <div>Loading MediaPipe models...</div>
+                        <div style="font-size: 0.9rem; opacity: 0.7; margin-top: 10px;">This may take a few seconds</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="status">
+                    <div><span id="statusIndicator" class="status-indicator loading"></span><span id="statusText">Initializing...</span></div>
+                </div>
+
+                <div class="control-group">
+                    <h3>📹 Camera Controls</h3>
+                    <button id="startButton">Start Camera</button>
+                    <button id="stopButton" disabled>Stop Camera</button>
+                </div>
+
+                <div class="control-group">
+                    <h3>🖐️ Hand Tracking</h3>
+                    <div class="control-item">
+                        <label>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Show Landmarks</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="showLandmarks" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="control-item">
+                        <label>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Show Connections</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="showConnections" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="control-item">
+                        <label>Max Hands: <span id="maxHandsValue">2</span></label>
+                        <input type="range" id="maxHands" min="1" max="4" value="2" style="width: 100%; margin-top: 5px;">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>⚙️ Processing Pipeline</h3>
+                    <div class="control-item">
+                        <label>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Background Removal</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="backgroundRemoval">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="control-item">
+                        <label>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Color Enhancement</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="colorEnhancement">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="metrics">
+                    <h3 style="margin-bottom: 10px; font-size: 1rem;">📊 Performance Metrics</h3>
+                    <div class="metrics-row">
+                        <span>FPS:</span>
+                        <span id="fpsDisplay">0</span>
+                    </div>
+                    <div class="metrics-row">
+                        <span>Hands Detected:</span>
+                        <span id="handsCount">0</span>
+                    </div>
+                    <div class="metrics-row">
+                        <span>Processing Time:</span>
+                        <span id="processingTime">0ms</span>
+                    </div>
+                    <div class="metrics-row">
+                        <span>Pipeline Status:</span>
+                        <span id="pipelineStatus">Idle</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MediaPipelineCameraApp {
+            constructor() {
+                this.video = document.getElementById('videoElement');
+                this.canvas = document.getElementById('canvasElement');
+                this.ctx = this.canvas.getContext('2d');
+                this.loadingScreen = document.getElementById('loadingScreen');
+                
+                // Performance tracking
+                this.frameCount = 0;
+                this.lastFrameTime = performance.now();
+                this.processingTimes = [];
+                
+                // MediaPipe components
+                this.hands = null;
+                this.camera = null;
+                
+                // UI elements
+                this.statusIndicator = document.getElementById('statusIndicator');
+                this.statusText = document.getElementById('statusText');
+                this.startButton = document.getElementById('startButton');
+                this.stopButton = document.getElementById('stopButton');
+                
+                // Settings
+                this.settings = {
+                    showLandmarks: true,
+                    showConnections: true,
+                    maxHands: 2,
+                    backgroundRemoval: false,
+                    colorEnhancement: false
+                };
+                
+                this.initializeEventListeners();
+                this.initializeMediaPipe();
+            }
+            
+            initializeEventListeners() {
+                this.startButton.addEventListener('click', () => this.startCamera());
+                this.stopButton.addEventListener('click', () => this.stopCamera());
+                
+                // Settings controls
+                document.getElementById('showLandmarks').addEventListener('change', (e) => {
+                    this.settings.showLandmarks = e.target.checked;
+                });
+                
+                document.getElementById('showConnections').addEventListener('change', (e) => {
+                    this.settings.showConnections = e.target.checked;
+                });
+                
+                document.getElementById('maxHands').addEventListener('input', (e) => {
+                    this.settings.maxHands = parseInt(e.target.value);
+                    document.getElementById('maxHandsValue').textContent = e.target.value;
+                    if (this.hands) {
+                        this.hands.setOptions({ maxNumHands: this.settings.maxHands });
+                    }
+                });
+                
+                document.getElementById('backgroundRemoval').addEventListener('change', (e) => {
+                    this.settings.backgroundRemoval = e.target.checked;
+                });
+                
+                document.getElementById('colorEnhancement').addEventListener('change', (e) => {
+                    this.settings.colorEnhancement = e.target.checked;
+                });
+            }
+            
+            async initializeMediaPipe() {
+                try {
+                    this.updateStatus('loading', 'Loading MediaPipe models...');
+                    
+                    // Initialize MediaPipe Hands
+                    this.hands = new Hands({
+                        locateFile: (file) => {
+                            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                        }
+                    });
+                    
+                    this.hands.setOptions({
+                        maxNumHands: this.settings.maxHands,
+                        modelComplexity: 1,
+                        minDetectionConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+                    
+                    this.hands.onResults((results) => this.onResults(results));
+                    
+                    this.updateStatus('ready', 'MediaPipe ready - Click Start Camera');
+                    
+                } catch (error) {
+                    console.error('MediaPipe initialization error:', error);
+                    this.updateStatus('error', 'Failed to load MediaPipe');
+                }
+            }
+            
+            async startCamera() {
+                try {
+                    this.updateStatus('loading', 'Starting camera...');
+                    
+                    // Initialize camera
+                    this.camera = new Camera(this.video, {
+                        onFrame: async () => {
+                            if (this.hands) {
+                                const startTime = performance.now();
+                                await this.hands.send({ image: this.video });
+                                const processingTime = performance.now() - startTime;
+                                this.processingTimes.push(processingTime);
+                                if (this.processingTimes.length > 10) {
+                                    this.processingTimes.shift();
+                                }
+                            }
+                        },
+                        width: 1280,
+                        height: 720
+                    });
+                    
+                    await this.camera.start();
+                    
+                    this.startButton.disabled = true;
+                    this.stopButton.disabled = false;
+                    this.updateStatus('ready', 'Camera active - Processing pipeline running');
+                    
+                    // Hide loading screen
+                    this.loadingScreen.style.display = 'none';
+                    
+                    // Start performance monitoring
+                    this.startPerformanceMonitoring();
+                    
+                } catch (error) {
+                    console.error('Camera start error:', error);
+                    this.updateStatus('error', 'Failed to start camera');
+                }
+            }
+            
+            stopCamera() {
+                if (this.camera) {
+                    this.camera.stop();
+                    this.camera = null;
+                }
+                
+                this.startButton.disabled = false;
+                this.stopButton.disabled = true;
+                this.updateStatus('ready', 'Camera stopped');
+                
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Show loading screen
+                this.loadingScreen.style.display = 'flex';
+            }
+            
+            onResults(results) {
+                const startProcessing = performance.now();
+                
+                // Set canvas dimensions
+                this.canvas.width = results.image.width;
+                this.canvas.height = results.image.height;
+                
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Apply image processing pipeline
+                this.processImagePipeline(results.image);
+                
+                // Draw hand annotations
+                if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                    this.drawHandAnnotations(results);
+                }
+                
+                // Update metrics
+                this.updateMetrics(results.multiHandLandmarks ? results.multiHandLandmarks.length : 0);
+                
+                const processingTime = performance.now() - startProcessing;
+                document.getElementById('processingTime').textContent = `${processingTime.toFixed(1)}ms`;
+                document.getElementById('pipelineStatus').textContent = 'Active';
+            }
+            
+            processImagePipeline(image) {
+                // Draw the original image
+                this.ctx.drawImage(image, 0, 0, this.canvas.width, this.canvas.height);
+                
+                // Apply processing effects based on settings
+                if (this.settings.backgroundRemoval || this.settings.colorEnhancement) {
+                    const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                    const data = imageData.data;
+                    
+                    for (let i = 0; i < data.length; i += 4) {
+                        // Background removal (simple green screen effect)
+                        if (this.settings.backgroundRemoval) {
+                            const r = data[i];
+                            const g = data[i + 1];
+                            const b = data[i + 2];
+                            
+                            // Simple background detection (adjust thresholds as needed)
+                            if (g > r + 50 && g > b + 50) {
+                                data[i + 3] = 0; // Make transparent
+                            }
+                        }
+                        
+                        // Color enhancement
+                        if (this.settings.colorEnhancement) {
+                            data[i] = Math.min(255, data[i] * 1.2);     // Red
+                            data[i + 1] = Math.min(255, data[i + 1] * 1.1); // Green
+                            data[i + 2] = Math.min(255, data[i + 2] * 1.3); // Blue
+                        }
+                    }
+                    
+                    this.ctx.putImageData(imageData, 0, 0);
+                }
+            }
+            
+            drawHandAnnotations(results) {
+                // Draw landmarks and connections for each hand
+                for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+                    const landmarks = results.multiHandLandmarks[i];
+                    const handedness = results.multiHandedness[i];
+                    
+                    // Determine hand color
+                    const handColor = handedness.label === 'Left' ? '#ff6b6b' : '#4ecdc4';
+                    
+                    // Draw connections
+                    if (this.settings.showConnections) {
+                        this.drawConnections(landmarks, HAND_CONNECTIONS, handColor);
+                    }
+                    
+                    // Draw landmarks
+                    if (this.settings.showLandmarks) {
+                        this.drawLandmarks(landmarks, handColor);
+                    }
+                    
+                    // Draw hand label
+                    const wrist = landmarks[0];
+                    this.ctx.fillStyle = handColor;
+                    this.ctx.font = '16px Arial';
+                    this.ctx.fillText(
+                        `${handedness.label} (${(handedness.score * 100).toFixed(0)}%)`,
+                        wrist.x * this.canvas.width,
+                        wrist.y * this.canvas.height - 10
+                    );
+                }
+            }
+            
+            drawConnections(landmarks, connections, color) {
+                this.ctx.strokeStyle = color;
+                this.ctx.lineWidth = 2;
+                
+                for (const connection of connections) {
+                    const start = landmarks[connection[0]];
+                    const end = landmarks[connection[1]];
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(start.x * this.canvas.width, start.y * this.canvas.height);
+                    this.ctx.lineTo(end.x * this.canvas.width, end.y * this.canvas.height);
+                    this.ctx.stroke();
+                }
+            }
+            
+            drawLandmarks(landmarks, color) {
+                this.ctx.fillStyle = color;
+                
+                for (const landmark of landmarks) {
+                    this.ctx.beginPath();
+                    this.ctx.arc(
+                        landmark.x * this.canvas.width,
+                        landmark.y * this.canvas.height,
+                        5,
+                        0,
+                        2 * Math.PI
+                    );
+                    this.ctx.fill();
+                }
+            }
+            
+            startPerformanceMonitoring() {
+                setInterval(() => {
+                    const now = performance.now();
+                    const deltaTime = now - this.lastFrameTime;
+                    const fps = 1000 / deltaTime;
+                    
+                    document.getElementById('fpsDisplay').textContent = fps.toFixed(1);
+                    
+                    this.lastFrameTime = now;
+                    this.frameCount++;
+                }, 1000);
+            }
+            
+            updateMetrics(handsCount) {
+                document.getElementById('handsCount').textContent = handsCount;
+            }
+            
+            updateStatus(type, message) {
+                this.statusIndicator.className = `status-indicator ${type}`;
+                this.statusText.textContent = message;
+            }
+        }
+        
+        // Hand connections for drawing
+        const HAND_CONNECTIONS = [
+            [0, 1], [1, 2], [2, 3], [3, 4],      // Thumb
+            [0, 5], [5, 6], [6, 7], [7, 8],      // Index finger
+            [0, 9], [9, 10], [10, 11], [11, 12], // Middle finger
+            [0, 13], [13, 14], [14, 15], [15, 16], // Ring finger
+            [0, 17], [17, 18], [18, 19], [19, 20], // Pinky
+            [5, 9], [9, 13], [13, 17]            // Palm connections
+        ];
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new MediaPipelineCameraApp();
+        });
+    </script>
+</body>
+</html> 
