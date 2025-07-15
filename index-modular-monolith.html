@@ -29077,7 +29077,12 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       Logger.system(`🚧 STARTUP: Setting ${savedMode} mode without auto-launch (prevent dual audio)`)
       
       // Set UI state and settings without triggering auto-launch
-      document.getElementById('systemMode').value = savedMode;
+      const systemModeElement = document.getElementById('systemMode');
+      if (systemModeElement) {
+        systemModeElement.value = savedMode;
+      } else {
+        Logger.warn('⚠️ systemMode element not found - skipping mode setting');
+      }
       
       // Update mode display text
       const modeDisplay = document.getElementById('systemModeDisplay');
@@ -29085,6 +29090,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         modeDisplay.textContent = 
           savedMode === 'demo' ? '🎹 Demo Mode - Auto-launches Piano Genie for instant music creation' :
           '🎛️ MPE Mode - Full advanced controls + spatial anchoring + multi-instruments';
+      } else {
+        Logger.warn('⚠️ systemModeDisplay element not found - skipping display update');
       }
       
       // Update header buttons
@@ -37236,8 +37243,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
 
   </script>
   
-  <!-- 🔍 ZONE KEYBOARD MAPPING DIAGNOSTICS -->
-  <script src="console-diagnostic.js"></script>
+  <!-- 🔍 ZONE KEYBOARD MAPPING DIAGNOSTICS - DISABLED FOR DEBUGGING -->
+  <!-- <script src="console-diagnostic.js"></script> -->
   
   <!-- 🚫 PWA SERVICE WORKER - DISABLED FOR DEBUGGING -->
   <script>
