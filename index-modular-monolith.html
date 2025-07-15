@@ -1659,10 +1659,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- 🚀 PWA META TAGS - DISABLED TO PREVENT MANIFEST ERRORS -->
+  <!-- 🚀 PWA META TAGS -->
   <meta name="description" content="Play music with hand gestures - browser-based hand tracking music controller">
-  <!-- PWA features disabled to prevent icon/manifest errors -->
-  <!--
   <meta name="theme-color" content="#007acc">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1670,14 +1668,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="msapplication-TileColor" content="#1a1a2e">
   <meta name="msapplication-tap-highlight" content="no">
-  -->
   
-  <!-- 🚀 PWA MANIFEST - DISABLED FOR PRODUCTION -->
-  <!-- <link rel="manifest" href="./manifest.json"> -->
+  <!-- 🚀 PWA MANIFEST - ENABLED FOR PRODUCTION -->
+  <link rel="manifest" href="./manifest.json">
   
-  <!-- 🚀 PWA ICONS - DISABLED TO PREVENT 404 ERRORS -->
+  <!-- 🚀 PWA ICONS -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎛️</text></svg>">
-  <!-- <link rel="apple-touch-icon" href="./icons/icon-180x180.png"> -->
+  <link rel="apple-touch-icon" href="./icons/icon-180x180.png">
   <title>TAGS - MPE Expression via Hand Tracking</title>
   <link rel="stylesheet" href="https://unpkg.com/handsfree@8.5.1/build/lib/assets/handsfree.css" />
       
@@ -11476,10 +11473,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       try {
         // 🎯 TIMING CHECK: Ensure UnifiedSettingsManager is available
         if (typeof window.UnifiedSettingsManager === 'undefined') {
-          // Use Logger with throttling to reduce console spam
-          Logger.throttle('piano-genie-settings-wait', () => {
-            Logger.system('⏳ UnifiedSettingsManager not ready yet, retrying Piano Genie settings...')
-          }, 1000)
+          console.log('⏳ UnifiedSettingsManager not ready yet, retrying Piano Genie settings...')
           setTimeout(() => {
             initializePianoGenieSettings()
           }, 200)
@@ -26584,10 +26578,6 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
     }
 
-    // 🔧 EXPOSE UNIFIED SETTINGS MANAGER TO WINDOW
-    // This fixes the timing issue where Piano Genie settings couldn't access UnifiedSettingsManager
-    window.UnifiedSettingsManager = UnifiedSettingsManager;
-
     // =============================================
     // AUDIO SYSTEM STATE MANAGEMENT
     // =============================================
@@ -37360,7 +37350,6 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
     // TODO: Re-enable after debugging is complete
     
     console.log('🔧 DEBUG MODE: Service Worker disabled to prevent auto-restarts');
-    console.log('🚫 PWA: Manifest and app icons also disabled to prevent 404 errors');
     
     // Clear any existing service worker and cache for clean testing
     if ('serviceWorker' in navigator) {
