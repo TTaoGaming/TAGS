@@ -8383,9 +8383,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
           const fingerNames = ['index', 'middle', 'ring', 'pinky'];
           if (this.logger && this.logger.throttle) {
             this.logger.throttle(
-              `zone-events-${data.hand}-${data.finger}`,
+              `zone-events-${zoneInfo.zoneId}-${data.finger}`,
               'system',
-              `🎯 ZONE PINCH: [${zoneInfo.zoneName}] Hand ${data.hand} ${fingerNames[data.finger]} ${eventType}${zoneInfo.zoneModifier} at (${pinchX.toFixed(3)}, ${fingerTip.y.toFixed(3)})`,
+              `🎯 ZONE PINCH: [${zoneInfo.zoneName}] ${fingerNames[data.finger]} ${eventType}${zoneInfo.zoneModifier} at (${pinchX.toFixed(3)}, ${fingerTip.y.toFixed(3)})`,
               3000
             );
           }
@@ -28673,7 +28673,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       const landmarksArray = handsData.multiHandLandmarks
       const zoneDataArray = handsData.zoneData || []
       
-      const DUPLICATE_THRESHOLD = 0.05 // 5% of screen space
+      const DUPLICATE_THRESHOLD = 0.01 // 1% of screen space - only remove true duplicates
       const deduplicatedLandmarks = []
       const deduplicatedZoneData = []
       
@@ -30615,9 +30615,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
           // 🎯 THROTTLED ZONE LOGGING (Boy Scout: prevent console spam)
           const fingerNames = ['index', 'middle', 'ring', 'pinky'];
           Logger.throttle(
-            `zone-events-${data.hand}-${data.finger}`,
+            `zone-events-${zoneInfo.zoneId}-${data.finger}`,
             'system',
-            `🎯 ZONE PINCH: [${zoneInfo.zoneName}] Hand ${data.hand + 1} ${fingerNames[data.finger]} ${eventType}${zoneInfo.zoneModifier} at (${pinchX.toFixed(3)}, ${fingerTip.y.toFixed(3)})`,
+            `🎯 ZONE PINCH: [${zoneInfo.zoneName}] ${fingerNames[data.finger]} ${eventType}${zoneInfo.zoneModifier} at (${pinchX.toFixed(3)}, ${fingerTip.y.toFixed(3)})`,
             3000
           );
         } else {
