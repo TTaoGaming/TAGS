@@ -2387,7 +2387,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
             <div class="orientation-display-section">
               <!-- Left Hand Clock -->
               <div class="hand-orientation-display">
-                <div class="hand-label">👈 Left Hand</div>
+                <div class="hand-label">🎯 Zone 1 (Left)</div>
                 <div class="orientation-clock" id="leftHandClock">
                   <svg viewBox="0 0 240 240" class="clock-svg">
                     <!-- Clock face circle -->
@@ -2456,7 +2456,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
               
               <!-- Right Hand Clock -->
               <div class="hand-orientation-display">
-                <div class="hand-label">👉 Right Hand</div>
+                <div class="hand-label">🎯 Zone 2 (Right)</div>
                 <div class="orientation-clock" id="rightHandClock">
                   <svg viewBox="0 0 240 240" class="clock-svg">
                     <!-- Clock face circle -->
@@ -7631,7 +7631,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
                 frameNumber: this.frameCount,
                 hands: hands,
                 landmarks: hands.multiHandLandmarks,
-                handedness: hands.multiHandedness,
+                // 🎯 ZONE DATA: Use zone data instead of handedness
+                zoneData: hands.zoneData || [],
                 source: this.cameraState.source
               })
               
@@ -7882,7 +7883,17 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
            // 🦴 ANATOMICAL ANALYSIS
            const boneRatios = this.calculateBoneRatios(landmarks)
            const handHash = this.generateStableHandHash(boneRatios)
-           const handedness = this.determineHandedness(landmarks, boneRatios)
+           const anatomicalSide = this.determineAnatomicalSide(landmarks, boneRatios) // Renamed for future use
+           
+           // 🎯 ZONE-BASED IDENTIFICATION: Use position-based zones instead of anatomical handedness
+           const wristPosition = landmarks[0] // Wrist landmark
+           const fingerZone = (1.0 - wristPosition.x) < 0.5 ? 0 : 1 // Zone 1 (Left) or Zone 2 (Right)
+           const zoneInfo = {
+             zoneId: fingerZone === 0 ? 'zone-left' : 'zone-right',
+             zoneName: fingerZone === 0 ? 'Zone 1 (Left)' : 'Zone 2 (Right)',
+             zoneIndex: fingerZone,
+             spatialZone: fingerZone + 1 // 1-based indexing for compatibility
+           }
            
            // 🔧 BIOMECHANICAL CONSTRAINTS
            const constrainedLandmarks = this.applyAnatomicalConstraints(landmarks)
@@ -7890,7 +7901,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
            
            processedHands.push({
              handHash: handHash,           // Stable identifier like "A1B2C3"
-             handedness: handedness,       // 'left' | 'right' (determined by anatomy)
+             zoneInfo: zoneInfo,           // 🎯 ZONE DATA: Position-based zone information
+             anatomicalSide: anatomicalSide, // 🧬 RESERVED: For future biomechanical detection
              landmarks3D: constrainedLandmarks,
              boneRatios: boneRatios,
              jointAngles: jointAngles,
@@ -7938,9 +7950,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
          return ratios
        }
        
-       // 🧬 Determine handedness from bone structure
-       determineHandedness(landmarks, boneRatios) {
-         // Analyze bone structure to determine left vs right
+       // 🧬 Determine anatomical side from bone structure (RESERVED for future biomechanical detection)
+       determineAnatomicalSide(landmarks, boneRatios) {
+         // Analyze bone structure to determine anatomical left vs right
          // This is simplified - real implementation would use anatomical analysis
          const thumbPosition = landmarks[4] // thumb tip
          const indexPosition = landmarks[8] // index tip
@@ -14000,10 +14012,10 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         }
         handTrackingDataProvider.updateData(filteredHandsData)
         
-        // 🎯 FIXED: Store latest landmarks using provider data
+        // 🎯 FIXED: Store latest landmarks using provider data with zone system
         latestLandmarks = {
           multiHandLandmarks: filteredHandsData.multiHandLandmarks,
-          multiHandedness: filteredHandsData.multiHandedness,
+          zoneData: filteredHandsData.zoneData || [],
           timestamp: Date.now()
         }
         
@@ -17577,7 +17589,18 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         
         const handsFreeData = {
           multiHandLandmarks: mediaPipeResults.landmarks,
-          multiHandedness: mediaPipeResults.multiHandedness || [],
+          // 🎯 ZONE DATA: Create zone data from landmarks for each hand
+          zoneData: mediaPipeResults.landmarks ? mediaPipeResults.landmarks.map((landmarks, index) => {
+            const wrist = landmarks[0] // Wrist landmark
+            const pinchX = wrist ? 1.0 - wrist.x : 0.5 // Mirror correction with fallback
+            const zoneIndex = pinchX < 0.5 ? 0 : 1
+            return {
+              zoneId: zoneIndex === 0 ? 'zone-left' : 'zone-right',
+              zoneName: zoneIndex === 0 ? 'Zone 1 (Left)' : 'Zone 2 (Right)',
+              zoneIndex: zoneIndex,
+              spatialZone: zoneIndex + 1
+            }
+          }) : [],
           pinchState: [[], []],  // [hand][finger] - will be calculated
           curPinch: [[], []]     // [hand][finger] - will be calculated
         }
@@ -17782,8 +17805,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
             {x: 0.5, y: 0.05, z: 0.3} // 20: pinky tip
           ]
         ],
-        multiHandedness: [
-          {label: 'Left', score: 0.9}
+        // 🎯 ZONE DATA: Mock zone data for testing
+        zoneData: [
+          {zoneId: 'zone-left', zoneName: 'Zone 1 (Left)', zoneIndex: 0, spatialZone: 1, score: 0.9}
         ]
       }
       
@@ -32517,14 +32541,19 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
                     // 🎯 ZONE-BASED DETECTION: Determine zone from wrist position
                     const wrist = landmarks[0]; // Wrist is landmark 0
                     const pinchX = wrist ? 1.0 - wrist.x : 0.5; // Mirror correction with fallback
-                    const zoneLabel = pinchX < 0.5 ? 'Zone 1 (Left)' : 'Zone 2 (Right)';
+                    const zoneIndex = pinchX < 0.5 ? 0 : 1;
+                    const zoneInfo = {
+                        zoneIndex: zoneIndex,
+                        zoneName: zoneIndex === 0 ? 'Zone 1 (Left)' : 'Zone 2 (Right)',
+                        zoneId: zoneIndex === 0 ? 'zone-left' : 'zone-right'
+                    };
                     
                     if (this.showConnections) {
-                        this.drawConnections(landmarks, zoneLabel);
+                        this.drawConnections(landmarks, zoneInfo);
                     }
                     
                     if (this.showLandmarks) {
-                        this.drawLandmarks(landmarks, zoneLabel);
+                        this.drawLandmarks(landmarks, zoneInfo);
                     }
                 }
                 
@@ -32591,16 +32620,17 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         }
 
         transformToLegacyFormat(hands, timestamp) {
-            // Transform MediaPipe landmarks to existing system format
+            // Transform MediaPipe landmarks to existing system format with zone data
             // This maintains compatibility with existing PrecisionPinchModule
             try {
                 return {
                     hands: {
                         landmarks: hands.left || hands.right ? [hands.left, hands.right].filter(h => h) : [],
                         multiHandLandmarks: [hands.left, hands.right].filter(h => h),
-                        multiHandedness: [
-                            hands.left ? { label: 'Left' } : null,
-                            hands.right ? { label: 'Right' } : null
+                        // 🎯 ZONE DATA: Use zone information instead of handedness
+                        zoneData: [
+                            hands.left ? { zoneId: 'zone-left', zoneName: 'Zone 1 (Left)', zoneIndex: 0, spatialZone: 1 } : null,
+                            hands.right ? { zoneId: 'zone-right', zoneName: 'Zone 2 (Right)', zoneIndex: 1, spatialZone: 2 } : null
                         ].filter(h => h)
                     },
                     timestamp
@@ -32611,10 +32641,11 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
             }
         }
 
-        drawLandmarks(landmarks, handLabel) {
-            const isLeft = handLabel === 'Left';
-            this.canvasCtx.fillStyle = isLeft ? '#FF6B6B' : '#4ECDC4'; // Red for left, cyan for right
-            this.canvasCtx.strokeStyle = isLeft ? '#FF4757' : '#00D2D3';
+        drawLandmarks(landmarks, zoneInfo) {
+            // 🎯 ZONE-BASED COLORS: Use zone information instead of handedness
+            const isZone1 = zoneInfo && (zoneInfo.zoneIndex === 0 || zoneInfo.zoneName.includes('Zone 1'));
+            this.canvasCtx.fillStyle = isZone1 ? '#FF6B6B' : '#4ECDC4'; // Red for Zone 1, cyan for Zone 2
+            this.canvasCtx.strokeStyle = isZone1 ? '#FF4757' : '#00D2D3';
             
             for (const landmark of landmarks) {
                 const x = landmark.x * this.canvasElement.width;
@@ -32627,9 +32658,10 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
             }
         }
 
-        drawConnections(landmarks, handLabel) {
-            const isLeft = handLabel === 'Left';
-            this.canvasCtx.strokeStyle = isLeft ? 'rgba(255, 107, 107, 0.8)' : 'rgba(78, 205, 196, 0.8)';
+        drawConnections(landmarks, zoneInfo) {
+            // 🎯 ZONE-BASED COLORS: Use zone information instead of handedness
+            const isZone1 = zoneInfo && (zoneInfo.zoneIndex === 0 || zoneInfo.zoneName.includes('Zone 1'));
+            this.canvasCtx.strokeStyle = isZone1 ? 'rgba(255, 107, 107, 0.8)' : 'rgba(78, 205, 196, 0.8)';
             this.canvasCtx.lineWidth = 2;
             
             // MediaPipe hand connection indices
