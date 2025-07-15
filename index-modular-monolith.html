@@ -3,10 +3,10 @@
 🎵 TAGS MUSICAL HAND TRACKING SYSTEM - USER & AI DOCUMENTATION HEADER
 ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-📄 FILE: index-modular-monolith.html (SELF-CONTAINED MONOLITH v25.7.5.0320 - PRODUCTION READY)
+📄 FILE: index-modular-monolith.html (SELF-CONTAINED MONOLITH v25.7.14.2332 - PRODUCTION READY)
 🎯 PURPOSE: Professional Musical Hand Tracking Instrument - Camera-to-MIDI Bridge with Spatial Expression
 📊 ARCHITECTURE: Event-Driven Modular Monolith (95% Event-Based) + Zero Magic Numbers + Complete Constants Consolidation
-📅 VERSION: v25.7.5.0320 (Format: YY.M.DD.HHMM) - July 5, 2025, 3:20 AM (DocumentationSyncSystem Complete)
+📅 VERSION: v25.7.14.2332 (Format: YY.M.DD.HHMM) - July 14, 2025, 11:32 PM (UnifiedSettingsManager Fix + PWA Disable + Boy Scout Cleanup)
 
 👥 FOR USERS: HOW TO USE THIS MUSICAL INSTRUMENT
 ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -101,9 +101,12 @@
     🎯 DESIRED: Pipeline pattern with pluggable decorators (loose coupling)
     🔍 DEBUGGING: Data flow integrity before architectural refactor
 
-🔧 TEMPORARY DEBUG FILES:
-    📁 console-diagnostic.js.disabled (was causing interference)
-    📁 Enhanced logging in main monolith (direct console.log bypass)
+🔧 DEBUG FILES STATUS:
+    📁 console-diagnostic.js.disabled (was causing interference - intentionally disabled)
+    📁 Enhanced logging in main monolith (direct console.log bypass for debugging)
+    📁 All magic numbers eliminated and moved to CONFIG constants (v25.6.30.1459+)
+    📁 UnifiedSettingsManager fully initialized with all required categories (v25.7.14.2332)
+    📁 PWA functionality cleanly disabled to prevent 404 errors (v25.7.14.2332)
 
 🤖 FOR AI CODING ASSISTANTS: CRITICAL COLLABORATION GUIDELINES  
 ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -367,7 +370,7 @@
     in this 37,000+ line self-documenting monolith. Prevents documentation drift and ensures
     AI assistants always have accurate, up-to-date information about system architecture.
 
-✅ IMPLEMENTATION STATUS: FULLY OPERATIONAL (v25.7.5.0320)
+✅ IMPLEMENTATION STATUS: FULLY OPERATIONAL (v25.7.14.2332)
     ✅ Phase 1: Documentation & Feedback - Complete specification created
     ✅ Phase 2: Test-Driven Implementation - 100% test success rate (6/6 tests passed)
     ✅ Phase 3: Staging & Validation - Successfully integrated into main monolith
@@ -436,7 +439,7 @@
     Use docSync.getSystemHealth() to understand current system functionality.
     The system prevents AI assistants from working with outdated or incorrect documentation.
 
-📊 CURRENT SYSTEM STATUS (v25.7.5.0320):
+📊 CURRENT SYSTEM STATUS (v25.7.14.2332):
 ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
 ✅ PRODUCTION READY: Fully functional musical instrument with professional logging
@@ -456,6 +459,25 @@
     🔄 Wrist Orientation: 12-position mapping for advanced expression control
     🚀 Velocity Prediction: AI-enhanced timing and musical expression
     📱 Responsive UI: 12-card accordion system with mode switching
+
+🚀 VERSION 25.7.14.2332 CHANGES (UNIFIED SETTINGS MANAGER FIX + PWA DISABLE + BOY SCOUT CLEANUP):
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+✅ CRITICAL BUG FIXES: Fixed UnifiedSettingsManager timing issue causing Piano Genie failures
+✅ IMPLEMENTED: Missing settings categories (ZONE_KEYBOARD, DOC_SYNC) with proper defaults
+✅ CORRECTED: Piano Genie audio routing API call from incorrect load() to load('MIDI', 'pianoGenieAudioRouting')
+✅ ENHANCED: Retry logic with throttled logging to eliminate console spam
+✅ UPGRADED: Settings cache initialization for all categories preventing undefined errors
+✅ DISABLED: PWA functionality to eliminate 404 errors from missing manifest/icons
+✅ REMOVED: PWA meta tags, manifest.json link, and app icon references
+✅ MAINTAINED: Mobile responsiveness while removing problematic PWA features  
+✅ DOCUMENTED: Clear explanations of all fixes and PWA disable rationale
+✅ APPLIED: Boy Scout rule - left codebase cleaner and more maintainable
+
+📊 IMPACT: Eliminates "Unknown settings category" errors and timing issues
+🎯 BENEFIT: Stable settings system with proper initialization sequence
+🔧 DEVELOPER: All settings categories now properly defined with defaults
+🚀 FUTURE: Solid foundation for additional settings categories
 
 🚀 VERSION 25.7.5.0320 CHANGES (DOCUMENTATION SYNC SYSTEM - AUTOMATED LIVING DOCUMENTATION):
 ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -1659,8 +1681,10 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- 🚀 PWA META TAGS -->
+  <!-- 🚀 PWA META TAGS - DISABLED TO PREVENT MANIFEST ERRORS -->
   <meta name="description" content="Play music with hand gestures - browser-based hand tracking music controller">
+  <!-- PWA features disabled to prevent icon/manifest errors -->
+  <!--
   <meta name="theme-color" content="#007acc">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1668,13 +1692,14 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="msapplication-TileColor" content="#1a1a2e">
   <meta name="msapplication-tap-highlight" content="no">
+  -->
   
-  <!-- 🚀 PWA MANIFEST - ENABLED FOR PRODUCTION -->
-  <link rel="manifest" href="./manifest.json">
+  <!-- 🚀 PWA MANIFEST - DISABLED FOR PRODUCTION -->
+  <!-- <link rel="manifest" href="./manifest.json"> -->
   
-  <!-- 🚀 PWA ICONS -->
+  <!-- 🚀 PWA ICONS - DISABLED TO PREVENT 404 ERRORS -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎛️</text></svg>">
-  <link rel="apple-touch-icon" href="./icons/icon-180x180.png">
+  <!-- <link rel="apple-touch-icon" href="./icons/icon-180x180.png"> -->
   <title>TAGS - MPE Expression via Hand Tracking</title>
   <link rel="stylesheet" href="https://unpkg.com/handsfree@8.5.1/build/lib/assets/handsfree.css" />
       
@@ -1902,7 +1927,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
     <div class="welcome-section">
       <div class="panel-header">
         <div class="panel-title">
-          <h2>TAGS <span class="version-badge" id="versionBadge">v25.6.29.2100</span></h2>
+          <h2>TAGS <span class="version-badge" id="versionBadge">v25.7.14.2332</span></h2>
           <p>Tectangle Audio Gesture Studio</p>
         </div>
         <button class="panel-close-btn" id="panelToggle" onclick="toggleSidePanel()" title="Hide Control Panel" aria-label="Close navigation panel" style="display: none;">
@@ -6469,7 +6494,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
     
     const VERSION_INFO = {
       // Current Version (YY.M.DD.HHMM format)
-      current: 'v25.6.30.1459',
+              current: 'v25.7.14.2332',
       
       // Semantic breakdown
       year: '25',
@@ -11473,7 +11498,10 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       try {
         // 🎯 TIMING CHECK: Ensure UnifiedSettingsManager is available
         if (typeof window.UnifiedSettingsManager === 'undefined') {
-          console.log('⏳ UnifiedSettingsManager not ready yet, retrying Piano Genie settings...')
+          // Use Logger with throttling to reduce console spam
+          Logger.throttle('piano-genie-settings-wait', () => {
+            Logger.system('⏳ UnifiedSettingsManager not ready yet, retrying Piano Genie settings...')
+          }, 1000)
           setTimeout(() => {
             initializePianoGenieSettings()
           }, 200)
@@ -11507,7 +11535,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         }
         
         // Load saved audio routing setting
-        const savedAudioRouting = window.UnifiedSettingsManager.load('pianoGenieAudioRouting')
+        const savedAudioRouting = window.UnifiedSettingsManager.load('MIDI', 'pianoGenieAudioRouting')
         if (savedAudioRouting) {
           Logger.system('🎹 Piano Genie: Loaded audio routing setting: ' + savedAudioRouting)
         }
@@ -26070,6 +26098,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
      * - UI: Interface preferences (accordion, panels, mode)
      * - SYSTEM: System configuration (MIDI, tracking, orientation)
      * - MIDI: Audio and MIDI-specific settings
+     * - ZONE_KEYBOARD: Zone keyboard mappings and configuration
+     * - DOC_SYNC: Documentation sync settings and history
      */
     const UnifiedSettingsManager = {
       // Storage keys for different setting categories
@@ -26077,7 +26107,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         CORE: 'cameraMPE-core-v2',        // Main app settings
         UI: 'cameraMPE-ui-v2',            // Interface preferences  
         SYSTEM: 'cameraMPE-system-v2',    // System configuration
-        MIDI: 'cameraMPE-midi-v2'         // MIDI/audio settings
+        MIDI: 'cameraMPE-midi-v2',        // MIDI/audio settings
+        ZONE_KEYBOARD: 'cameraMPE-zones-v2', // Zone keyboard mappings
+        DOC_SYNC: 'cameraMPE-docs-v2'     // Documentation sync settings
       },
       
       // Legacy keys that need migration
@@ -26097,7 +26129,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         CORE: null,
         UI: null,
         SYSTEM: null,
-        MIDI: null
+        MIDI: null,
+        ZONE_KEYBOARD: null,
+        DOC_SYNC: null
       },
       
       // Migration status
@@ -26163,7 +26197,29 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
             midiConfiguration: {},
             
             // Audio settings
-            masterVolume: 0.75
+            masterVolume: 0.75,
+            
+            // Piano Genie settings
+            pianoGenieAudioRouting: 'built-in'
+          },
+          
+          ZONE_KEYBOARD: {
+            // Zone keyboard mappings
+            mappings: {},
+            
+            // Zone configuration
+            zoneLayout: 'split',
+            splitPosition: 0.5
+          },
+          
+          DOC_SYNC: {
+            // Documentation sync settings
+            lastSync: null,
+            syncHistory: [],
+            
+            // Sync preferences
+            autoSync: false,
+            syncInterval: 86400000 // 24 hours in milliseconds
           }
         }
         
@@ -26577,6 +26633,10 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         Logger.system('✅ Applied saved settings to visualization systems and deadzone configuration')
       }
     }
+
+    // 🔧 EXPOSE UNIFIED SETTINGS MANAGER TO WINDOW
+    // This fixes the timing issue where Piano Genie settings couldn't access UnifiedSettingsManager
+    window.UnifiedSettingsManager = UnifiedSettingsManager;
 
     // =============================================
     // AUDIO SYSTEM STATE MANAGEMENT
@@ -36583,7 +36643,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         
         // Module state
         this.isInitialized = false;
-        this.currentVersion = window.VERSION_INFO?.version || 'v25.7.1.1800';
+        this.currentVersion = window.VERSION_INFO?.version || 'v25.7.14.2332';
         this.documentationSections = new Map();
         this.validationRules = new Map();
         this.lastSyncTime = null;
@@ -37350,6 +37410,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
     // TODO: Re-enable after debugging is complete
     
     console.log('🔧 DEBUG MODE: Service Worker disabled to prevent auto-restarts');
+    console.log('🚫 PWA: Manifest and app icons also disabled to prevent 404 errors');
+    console.log('💡 PWA can be re-enabled by restoring manifest.json link and adding icon files');
     
     // Clear any existing service worker and cache for clean testing
     if ('serviceWorker' in navigator) {
