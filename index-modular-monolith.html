@@ -1669,8 +1669,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
   <meta name="msapplication-TileColor" content="#1a1a2e">
   <meta name="msapplication-tap-highlight" content="no">
   
-  <!-- 🚀 PWA MANIFEST - DISABLED FOR TESTING -->
-  <!-- <link rel="manifest" href="./manifest.json"> -->
+  <!-- 🚀 PWA MANIFEST - ENABLED FOR PRODUCTION -->
+  <link rel="manifest" href="./manifest.json">
   
   <!-- 🚀 PWA ICONS -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎛️</text></svg>">
@@ -1692,12 +1692,23 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
   <!-- Define onOpenCvReady before loading OpenCV -->
   <script>
     function onOpenCvReady() {
-      Logger.system('📐 OpenCV.js ✅ Ready for calibration!')
+      // 🎯 TIMING FIX: Check if Logger exists before using it
+      if (typeof Logger !== 'undefined') {
+        Logger.system('📐 OpenCV.js ✅ Ready for calibration!')
+      } else {
+        console.log('📐 OpenCV.js ✅ Ready for calibration! (Logger not yet available)')
+      }
+      
       if (typeof window.openCvState !== 'undefined') {
         window.openCvState.instance = cv
         window.openCvState.isReady = true
       }
-      Logger.system('📐 OpenCV.js loaded successfully')
+      
+      if (typeof Logger !== 'undefined') {
+        Logger.system('📐 OpenCV.js loaded successfully')
+      } else {
+        console.log('📐 OpenCV.js loaded successfully (Logger not yet available)')
+      }
     }
   </script>
   
@@ -2063,6 +2074,16 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       
       <!-- 🍎 Apple HIG Mode Selector -->
       <!-- System Mode now controlled by header Demo/MPE toggle -->
+      <div class="control-group" style="margin-top: 16px;">
+        <label for="systemMode" style="font-size: 14px; color: #ffffff; margin-bottom: 8px; display: block;">System Mode:</label>
+        <select id="systemMode" style="width: 100%; padding: 8px; font-size: 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ffffff; border-radius: 4px;">
+          <option value="demo">🎹 Demo Mode</option>
+          <option value="mpe">🎛️ MPE Mode</option>
+        </select>
+        <div id="systemModeDisplay" style="font-size: 12px; color: #999; margin-top: 4px; font-style: italic;">
+          🎹 Demo Mode - Auto-launches Piano Genie for instant music creation
+        </div>
+      </div>
       
       <!-- System Status -->
       <div class="status-grid" style="margin-top: 16px;">
@@ -5815,10 +5836,15 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
     document.addEventListener('DOMContentLoaded', function() {
       initializeAccordion();
       
-      // Initialize Piano Genie system
-      initializePianoGenieMobileSupport();
+          // Initialize Piano Genie system
+    initializePianoGenieMobileSupport();
+    
+    // 🎯 TIMING FIX: Delay Piano Genie settings until UnifiedSettingsManager is ready
+    setTimeout(() => {
       initializePianoGenieSettings();
-      initializePianoGeniePostMessageListener();
+    }, 100);
+    
+    initializePianoGeniePostMessageListener();
     });
 
     /**
@@ -6661,6 +6687,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
      * Streamlined startup logging system
      * Reduces console spam from 100+ lines to 10-15 essentials
      */
+    // Initialize system readiness flag
+    window.systemReady = false;
+    
     window.StartupLogger = {
       _phases: ['Core Systems', 'Audio/MIDI', 'Camera/Tracking', 'UI Setup'],
       _current: 0,
@@ -6705,6 +6734,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         const totalTime = Date.now() - this._startTime;
         const errorCount = this._errors.length;
         const warningCount = this._warnings.length;
+        
+        // Set system readiness flag
+        window.systemReady = true;
         
         if (CONFIG.logging.startupMode === 'minimal') {
           console.log(`🚀 Ready! (${totalTime}ms)${errorCount ? ` - ${errorCount} errors` : ''}`);
@@ -11439,6 +11471,31 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
      */
     function initializePianoGenieSettings() {
       try {
+        // 🎯 TIMING CHECK: Ensure UnifiedSettingsManager is available
+        if (typeof window.UnifiedSettingsManager === 'undefined') {
+          console.log('⏳ UnifiedSettingsManager not ready yet, retrying Piano Genie settings...')
+          setTimeout(() => {
+            initializePianoGenieSettings()
+          }, 200)
+          return
+        }
+        
+        // 🎯 Initialize default settings to prevent startup warnings
+        const defaultSettings = {
+          pianoGenieTransparency: 80,
+          pianoMode: 'disabled',
+          visualCleanup: true,
+          transparency: 80
+        }
+        
+        // Set defaults if they don't exist
+        Object.keys(defaultSettings).forEach(key => {
+          const currentValue = window.UnifiedSettingsManager.load('UI', key)
+          if (currentValue === null) {
+            window.UnifiedSettingsManager.save('UI', key, defaultSettings[key])
+          }
+        })
+        
         // Load saved transparency setting
         const savedTransparency = window.UnifiedSettingsManager.load('UI', 'pianoGenieTransparency')
         if (savedTransparency !== null) {
@@ -11456,6 +11513,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         }
         
         Logger.system('🎹 Piano Genie: Settings initialized from UnifiedSettingsManager')
+        Logger.system('✅ Piano Genie: Default settings applied successfully')
       } catch (error) {
                  Logger.warn('Could not load Piano Genie settings:', error.message)
        }
@@ -18823,6 +18881,18 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
        * Switch to a different visualization strategy with robust error handling
        */
       switchStrategy(strategyName) {
+        // 🚀 SYSTEM READINESS CHECK: Prevent anchor strategy errors during startup
+        if (!window.systemReady) {
+          Logger.system(`⏳ System not ready yet - deferring anchor strategy switch to '${strategyName}'`)
+          
+          // Defer the strategy switch until system is ready
+          setTimeout(() => {
+            Logger.system(`🔄 System now ready - applying deferred anchor strategy: ${strategyName}`)
+            this.switchStrategy(strategyName)
+          }, 100)
+          return true // Return true to prevent error cascades during startup
+        }
+        
         // 🏕️ BOY SCOUT: Handle legacy gaming-minimal key mapping
         const legacyKeyMap = {
           'gaming-minimal': 'gaming-minimal'
@@ -29103,6 +29173,30 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
           button.classList.remove('active');
         }
       });
+      
+      // 🎯 Add system mode change event listener
+      if (systemModeElement) {
+        systemModeElement.addEventListener('change', function() {
+          const newMode = this.value;
+          Logger.system(`🎛️ System mode changed to: ${newMode}`);
+          
+          // Update display text
+          if (modeDisplay) {
+            modeDisplay.textContent = 
+              newMode === 'demo' ? '🎹 Demo Mode - Auto-launches Piano Genie for instant music creation' :
+              '🎛️ MPE Mode - Full advanced controls + spatial anchoring + multi-instruments';
+          }
+          
+          // Save the new mode
+          UnifiedSettingsManager.save('UI', 'userPreferredMode', newMode);
+          
+          // Update system mode if SystemMode is available
+          if (typeof SystemMode !== 'undefined') {
+            SystemMode.isAdvanced = (newMode === 'mpe');
+            SystemMode.applyMode();
+          }
+        });
+      }
       
       // Save setting without triggering auto-launch
       UnifiedSettingsManager.save('UI', 'userPreferredMode', savedMode);

@@ -2,7 +2,7 @@
   "name": "Handsfree Camera-MPE Music Controller",
   "short_name": "Handsfree MPE",
   "description": "Play music with hand gestures - browser-based hand tracking music controller",
-  "start_url": "./index.html",
+  "start_url": "./index-modular-monolith.html",
   "display": "standalone",
   "background_color": "#1a1a2e",
   "theme_color": "#007acc",
