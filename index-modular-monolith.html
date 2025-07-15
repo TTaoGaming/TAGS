@@ -11473,7 +11473,10 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       try {
         // 🎯 TIMING CHECK: Ensure UnifiedSettingsManager is available
         if (typeof window.UnifiedSettingsManager === 'undefined') {
-          console.log('⏳ UnifiedSettingsManager not ready yet, retrying Piano Genie settings...')
+          // Use Logger with throttling to reduce console spam
+          Logger.throttle('piano-genie-settings-wait', () => {
+            Logger.system('⏳ UnifiedSettingsManager not ready yet, retrying Piano Genie settings...')
+          }, 1000)
           setTimeout(() => {
             initializePianoGenieSettings()
           }, 200)
@@ -26577,6 +26580,10 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         Logger.system('✅ Applied saved settings to visualization systems and deadzone configuration')
       }
     }
+
+    // 🔧 EXPOSE UNIFIED SETTINGS MANAGER TO WINDOW
+    // This fixes the timing issue where Piano Genie settings couldn't access UnifiedSettingsManager
+    window.UnifiedSettingsManager = UnifiedSettingsManager;
 
     // =============================================
     // AUDIO SYSTEM STATE MANAGEMENT
