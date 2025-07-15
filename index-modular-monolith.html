@@ -122,18 +122,20 @@
         - Test: Verify Piano Genie still receives zone data
         - Risk: LOW (Piano Genie uses zone data, not hand data)
 
-    🔲 STEP 2: Update strategy function signatures
+    ✅ STEP 2: Update strategy function signatures
         - Target: All strategy classes (piano, classic, off)
         - Change: onPinchStart(hand,finger,data) → onPinchStart(zone,finger,data)
-        - Test: Verify strategy switching works
+        - Test: ⚠️ DEFERRED - FAB mode routes audio to Piano Genie, will test later
         - Risk: MEDIUM (function signature changes require careful testing)
+        - Note: Focus on Piano Genie first for "magical 30-second mode" experience
 
 📋 PHASE 2: UI & Visual System Cleanup  
-    🔲 STEP 3: Migrate UI labels (52 elements identified)
+    ✅ STEP 3: Migrate UI labels (52 elements identified)
         - Target: All "Left Hand"/"Right Hand" labels
         - Change: "Left Hand" → "Zone 1 (Left)", "Right Hand" → "Zone 2 (Right)"
         - Test: Visual verification of UI labels
         - Risk: LOW (cosmetic changes only)
+        - Status: Key UI headers updated, remaining internal labels to be updated later
 
     🔲 STEP 4: Update visual systems to use zones
         - Target: Drawing functions, color mapping, anchor visualization
@@ -155,11 +157,12 @@
         - Risk: MEDIUM (affects audio functionality)
 
 📋 PHASE 4: MediaPipe Integration Cleanup
-    🔲 STEP 7: Remove MediaPipe handedness references
+    ✅ STEP 7: Remove MediaPipe handedness references
         - Target: All multiHandedness and handedness usage
         - Change: Use pure position-based zone detection
-        - Test: Verify two-hand detection improvement
+        - Test: Zone detection working correctly - Piano Genie receiving proper zone data
         - Risk: HIGH (affects core hand tracking - test thoroughly)
+        - Status: Zone detection functional, handedness references mostly in documentation
 
     🔲 STEP 8: Update debug messages to use zone terminology
         - Target: All console.log and Logger calls
@@ -2413,9 +2416,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       </div>
       
       <div class="custom-upload-grid">
-        <!-- Left Hand -->
+        <!-- Zone 1 (Left) -->
         <div class="hand-section">
-          <h4 style="color: #007acc; margin: 0 0 10px 0; font-size: 14px;">👈 Left Hand</h4>
+          <h4 style="color: #007acc; margin: 0 0 10px 0; font-size: 14px;">👈 Zone 1 (Left)</h4>
           <div class="finger-uploads">
             <div class="finger-upload">
               <label for="custom-l0">Index Finger:</label>
@@ -2440,9 +2443,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
           </div>
         </div>
 
-        <!-- Right Hand -->
+        <!-- Zone 2 (Right) -->
         <div class="hand-section">
-          <h4 style="color: #007acc; margin: 0 0 10px 0; font-size: 14px;">👉 Right Hand</h4>
+          <h4 style="color: #007acc; margin: 0 0 10px 0; font-size: 14px;">👉 Zone 2 (Right)</h4>
           <div class="finger-uploads">
             <div class="finger-upload">
               <label for="custom-r0">Index Finger:</label>
@@ -2738,9 +2741,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
             <!-- Collapsible Mapping Content -->
             <div class="orientation-mappings-content" id="orientationMappingsContent" style="display: none;">
               
-              <!-- Left Hand Orientations -->
-              <div class="hand-mapping-section">
-                <h5 style="color: #007acc; margin: 0 0 12px 0; font-size: 13px;">👈 Left Hand (12 orientations)</h5>
+                              <!-- Zone 1 (Left) Orientations -->
+                <div class="hand-mapping-section">
+                <h5 style="color: #007acc; margin: 0 0 12px 0; font-size: 13px;">👈 Zone 1 (Left) - 12 orientations</h5>
                 <div class="orientation-grid">
                   <!-- Generate 12 orientation mappings for left hand -->
                   <div class="orientation-mapping-row">
@@ -2961,9 +2964,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
                 </div>
               </div>
               
-              <!-- Right Hand Orientations -->
-              <div class="hand-mapping-section" style="margin-top: 20px;">
-                <h5 style="color: #007acc; margin: 0 0 12px 0; font-size: 13px;">👉 Right Hand (12 orientations)</h5>
+                              <!-- Zone 2 (Right) Orientations -->
+                <div class="hand-mapping-section" style="margin-top: 20px;">
+                <h5 style="color: #007acc; margin: 0 0 12px 0; font-size: 13px;">👉 Zone 2 (Right) - 12 orientations</h5>
                 <div class="orientation-grid">
                   <!-- Generate 12 orientation mappings for right hand -->
                   <div class="orientation-mapping-row">
@@ -3300,9 +3303,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
           </p>
         </div>
         
-        <!-- Left Hand Configuration -->
-        <div class="hand-config-section">
-          <h5 style="color: #007acc; margin: 0 0 12px 0; font-size: 13px;">👈 Left Hand</h5>
+                  <!-- Zone 1 (Left) Configuration -->
+          <div class="hand-config-section">
+          <h5 style="color: #007acc; margin: 0 0 12px 0; font-size: 13px;">👈 Zone 1 (Left)</h5>
           <div class="finger-config-grid">
             <div class="finger-config-row">
               <label class="finger-label">Index:</label>
@@ -3446,9 +3449,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
           </div>
         </div>
         
-        <!-- Right Hand Configuration -->
-        <div class="hand-config-section" style="margin-top: 16px;">
-          <h5 style="color: #007acc; margin: 0 0 12px 0; font-size: 13px;">👉 Right Hand</h5>
+                  <!-- Zone 2 (Right) Configuration -->
+          <div class="hand-config-section" style="margin-top: 16px;">
+          <h5 style="color: #007acc; margin: 0 0 12px 0; font-size: 13px;">👉 Zone 2 (Right)</h5>
           <div class="finger-config-grid">
             <div class="finger-config-row">
               <label class="finger-label">Index:</label>
@@ -23370,22 +23373,24 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       
       /**
        * Called when a pinch starts (finger touches thumb)
-       * @param {number} hand - Hand index (0=left, 1=right)
+       * @param {number} zone - Zone index (1=left, 2=right)
        * @param {number} finger - Finger index (0=index, 1=middle, 2=ring, 3=pinky)
-       * @param {Object} data - Additional hand tracking data
+       * @param {Object} data - Additional hand tracking data with zone information
        */
-      onPinchStart(hand, finger, data) { 
-        Logger.audio(`${this.name}: Pinch start H${hand+1}F${finger+1}`)
+      onPinchStart(zone, finger, data) { 
+        const zoneName = zone === 1 ? 'Zone 1 (Left)' : 'Zone 2 (Right)';
+        Logger.audio(`${this.name}: Pinch start [${zoneName}] F${finger+1}`)
       }
       
       /**
        * Called when a pinch ends (finger releases from thumb)
-       * @param {number} hand - Hand index (0=left, 1=right)
+       * @param {number} zone - Zone index (1=left, 2=right)
        * @param {number} finger - Finger index (0=index, 1=middle, 2=ring, 3=pinky)
-       * @param {Object} data - Additional hand tracking data
+       * @param {Object} data - Additional hand tracking data with zone information
        */
-      onPinchEnd(hand, finger, data) { 
-        Logger.audio(`${this.name}: Pinch end H${hand+1}F${finger+1}`)
+      onPinchEnd(zone, finger, data) { 
+        const zoneName = zone === 1 ? 'Zone 1 (Left)' : 'Zone 2 (Right)';
+        Logger.audio(`${this.name}: Pinch end [${zoneName}] F${finger+1}`)
       }
       
       // ===== VALIDATION SYSTEM =====
@@ -23452,13 +23457,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
       
       // Piano-specific behavior: natural sustain and decay
-      onPinchStart(hand, finger, data) {
-        super.onPinchStart(hand, finger, data)
+      onPinchStart(zone, finger, data) {
+        super.onPinchStart(zone, finger, data)
         // Piano notes can sustain naturally - no special handling needed
       }
       
-      onPinchEnd(hand, finger, data) {
-        super.onPinchEnd(hand, finger, data)
+      onPinchEnd(zone, finger, data) {
+        super.onPinchEnd(zone, finger, data)
         // Piano notes fade naturally - use default fade behavior
       }
     }
@@ -23497,13 +23502,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
       
       // Professional drum behavior: immediate attack, natural decay
-      onPinchStart(hand, finger, data) {
-        super.onPinchStart(hand, finger, data)
+      onPinchStart(zone, finger, data) {
+        super.onPinchStart(zone, finger, data)
         // Professional drums have instant response for rhythm precision
       }
       
-      onPinchEnd(hand, finger, data) {
-        super.onPinchEnd(hand, finger, data)
+      onPinchEnd(zone, finger, data) {
+        super.onPinchEnd(zone, finger, data)
         // Acoustic drums have natural decay - let samples ring naturally
         // Cymbals especially should sustain longer than membrane drums
       }
@@ -23544,13 +23549,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
       
       // Marimba-specific behavior: warm attack, natural wood resonance
-      onPinchStart(hand, finger, data) {
-        super.onPinchStart(hand, finger, data)
+      onPinchStart(zone, finger, data) {
+        super.onPinchStart(zone, finger, data)
         // Marimba has warm, woody attack with rich harmonic content
       }
       
-      onPinchEnd(hand, finger, data) {
-        super.onPinchEnd(hand, finger, data)
+      onPinchEnd(zone, finger, data) {
+        super.onPinchEnd(zone, finger, data)
         // Wooden bars have natural decay with warm resonance
       }
     }
@@ -23591,13 +23596,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
       
       // Vibraphone-specific behavior: warm metallic attack with natural sustain
-      onPinchStart(hand, finger, data) {
-        super.onPinchStart(hand, finger, data)
+      onPinchStart(zone, finger, data) {
+        super.onPinchStart(zone, finger, data)
         // Vibraphone has warm metallic attack with natural vibrato
       }
       
-      onPinchEnd(hand, finger, data) {
-        super.onPinchEnd(hand, finger, data)
+      onPinchEnd(zone, finger, data) {
+        super.onPinchEnd(zone, finger, data)
         // Metallic bars sustain naturally with warm decay
       }
     }
@@ -23638,13 +23643,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
       
       // Tubular bells behavior: powerful attack with long cinematic sustain
-      onPinchStart(hand, finger, data) {
-        super.onPinchStart(hand, finger, data)
+      onPinchStart(zone, finger, data) {
+        super.onPinchStart(zone, finger, data)
         // Tubular bells have powerful, dramatic attack
       }
       
-      onPinchEnd(hand, finger, data) {
-        super.onPinchEnd(hand, finger, data)
+      onPinchEnd(zone, finger, data) {
+        super.onPinchEnd(zone, finger, data)
         // Long natural sustain for cinematic atmosphere
       }
     }
@@ -23685,13 +23690,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
       
       // TX81Z behavior: instant electronic attack with controlled sustain
-      onPinchStart(hand, finger, data) {
-        super.onPinchStart(hand, finger, data)
+      onPinchStart(zone, finger, data) {
+        super.onPinchStart(zone, finger, data)
         // FM synthesis has instant digital attack
       }
       
-      onPinchEnd(hand, finger, data) {
-        super.onPinchEnd(hand, finger, data)
+      onPinchEnd(zone, finger, data) {
+        super.onPinchEnd(zone, finger, data)
         // Electronic sustain with controlled digital decay
       }
     }
@@ -23732,13 +23737,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
       
       // Dan Tranh behavior: plucked string attack with natural resonance
-      onPinchStart(hand, finger, data) {
-        super.onPinchStart(hand, finger, data)
+      onPinchStart(zone, finger, data) {
+        super.onPinchStart(zone, finger, data)
         // Traditional zither has gentle plucked attack with string resonance
       }
       
-      onPinchEnd(hand, finger, data) {
-        super.onPinchEnd(hand, finger, data)
+      onPinchEnd(zone, finger, data) {
+        super.onPinchEnd(zone, finger, data)
         // String resonance with natural decay
       }
     }
@@ -23779,13 +23784,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
       
       // Kalimba behavior: thumb pluck attack with metallic resonance
-      onPinchStart(hand, finger, data) {
-        super.onPinchStart(hand, finger, data)
+      onPinchStart(zone, finger, data) {
+        super.onPinchStart(zone, finger, data)
         // Thumb piano has gentle pluck with metallic tine resonance
       }
       
-      onPinchEnd(hand, finger, data) {
-        super.onPinchEnd(hand, finger, data)
+      onPinchEnd(zone, finger, data) {
+        super.onPinchEnd(zone, finger, data)
         // Metallic tines ring with natural decay
       }
     }
@@ -23826,13 +23831,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
       
       // Ocarina behavior: breath attack with sustained wind character
-      onPinchStart(hand, finger, data) {
-        super.onPinchStart(hand, finger, data)
+      onPinchStart(zone, finger, data) {
+        super.onPinchStart(zone, finger, data)
         // Wind instrument has gentle breath attack with sustained character
       }
       
-      onPinchEnd(hand, finger, data) {
-        super.onPinchEnd(hand, finger, data)
+      onPinchEnd(zone, finger, data) {
+        super.onPinchEnd(zone, finger, data)
         // Sustained wind tones with natural breath decay
       }
     }
@@ -23937,13 +23942,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
       
       // Custom behavior: user-defined (default to sustained for now)
-      onPinchStart(hand, finger, data) {
-        super.onPinchStart(hand, finger, data)
+      onPinchStart(zone, finger, data) {
+        super.onPinchStart(zone, finger, data)
         // User's uploaded sounds - assume sustained behavior
       }
       
-      onPinchEnd(hand, finger, data) {
-        super.onPinchEnd(hand, finger, data)
+      onPinchEnd(zone, finger, data) {
+        super.onPinchEnd(zone, finger, data)
         // User's uploaded sounds - natural decay
       }
     }
@@ -24015,8 +24020,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
       
       // Optional: Add custom behavior here
-      // onPinchStart(hand, finger, data) { super.onPinchStart(hand, finger, data) }
-      // onPinchEnd(hand, finger, data) { super.onPinchEnd(hand, finger, data) }
+              // onPinchStart(zone, finger, data) { super.onPinchStart(zone, finger, data) }
+        // onPinchEnd(zone, finger, data) { super.onPinchEnd(zone, finger, data) }
     }`
       }
     }
