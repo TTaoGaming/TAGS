@@ -10434,10 +10434,12 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         // 2. Switch audio to built-in
         window.audioRoutingMode = 'built-in'
         
-        // 3. Re-enable built-in audio event listeners
+        // 3. Re-enable built-in audio event listeners (with duplicate prevention)
         if (window.gcFreeOrchestrator && window.builtinAudioListener) {
+          // 🎯 DEDUPLICATION: Remove existing listener before adding to prevent duplicates
+          window.gcFreeOrchestrator.off('pinchState', window.builtinAudioListener)
           window.gcFreeOrchestrator.on('pinchState', window.builtinAudioListener)
-          Logger.system('🔊 Built-in audio listener re-enabled')
+          Logger.system('🔊 Built-in audio listener re-enabled (duplicate-safe)')
         }
         
         // 4. Disconnect Piano Genie event bridge
@@ -10604,10 +10606,12 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         cleanupPianoGenieEventBridge()
       }
       
-      // Re-enable built-in audio event listeners
+      // Re-enable built-in audio event listeners (with duplicate prevention)
       if (window.gcFreeOrchestrator && window.builtinAudioListener) {
+        // 🎯 DEDUPLICATION: Remove existing listener before adding to prevent duplicates
+        window.gcFreeOrchestrator.off('pinchState', window.builtinAudioListener)
         window.gcFreeOrchestrator.on('pinchState', window.builtinAudioListener)
-        Logger.system('🔊 Built-in audio listener re-enabled')
+        Logger.system('🔊 Built-in audio listener re-enabled (duplicate-safe)')
       }
       
       Logger.system('🎹 Piano Genie: Audio routing → Built-in system (Piano Genie audio disabled)')
@@ -17882,28 +17886,38 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       }
       
       const hands = currentData.multiHandLandmarks
-      const handedness = currentData.multiHandedness
       
-      if (!hands || hands.length === 0 || !handedness) {
+      if (!hands || hands.length === 0) {
         return null
       }
       
-      // Find the correct hand based on handedness
+      // 🎯 ZONE-BASED HAND DETECTION: Replace handedness with position-based zones
       let targetHandIndex = -1
       
-      for (let i = 0; i < handedness.length; i++) {
-        const handLabel = handedness[i].label.toLowerCase()
-        const isLeft = handLabel === 'left'
-        const isRight = handLabel === 'right'
+      // MediaPipe hand landmark indices for fingertips
+      const fingerTipIndices = [8, 12, 16, 20] // Index, Middle, Ring, Pinky fingertips
+      const landmarkIndex = fingerTipIndices[finger]
+      
+      // Find hand that matches the requested zone based on finger position
+      for (let i = 0; i < hands.length; i++) {
+        const landmarks = hands[i]
+        if (!landmarks || !landmarks[landmarkIndex]) {
+          continue
+        }
         
-        if ((hand === 0 && isLeft) || (hand === 1 && isRight)) {
+        const fingerTip = landmarks[landmarkIndex]
+        // 🎯 MIRROR FIX: Flip X coordinate because video feed is mirrored
+        const pinchX = 1.0 - fingerTip.x
+        const fingerZone = pinchX < 0.5 ? 0 : 1 // Zone 1 (Left) = hand 0, Zone 2 (Right) = hand 1
+        
+        if (fingerZone === hand) {
           targetHandIndex = i
           break
         }
       }
       
       if (targetHandIndex === -1 || !hands[targetHandIndex]) {
-        // 🎯 FALLBACK: Use first available hand if handedness detection fails
+        // 🎯 FALLBACK: Use first available hand if zone detection fails
         if (hands.length > 0 && hands[0]) {
           targetHandIndex = 0
         } else {
@@ -17911,10 +17925,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         }
       }
       
-      // MediaPipe hand landmark indices for fingertips
-      const fingerTipIndices = [8, 12, 16, 20] // Index, Middle, Ring, Pinky fingertips
-      const landmarkIndex = fingerTipIndices[finger]
-      
+      // Use already declared variables from above
       const landmarks = hands[targetHandIndex]
       if (!landmarks || !landmarks[landmarkIndex]) {
         return null
@@ -28634,18 +28645,18 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         return hands // No duplicates possible
       }
       
-      // 🎯 PROVIDER ACCESS: Use local variables from provider data
+      // 🎯 PROVIDER ACCESS: Use local variables from provider data with zone support
       const landmarksArray = handsData.multiHandLandmarks
-      const handednessArray = handsData.multiHandedness
+      const zoneDataArray = handsData.zoneData || []
       
       const DUPLICATE_THRESHOLD = 0.05 // 5% of screen space
       const deduplicatedLandmarks = []
-      const deduplicatedHandedness = []
+      const deduplicatedZoneData = []
       
       // Check each hand against previously kept hands
       for (let i = 0; i < landmarksArray.length; i++) {
         const currentHand = landmarksArray[i]
-        const currentHandedness = handednessArray?.[i]
+        const currentZoneData = zoneDataArray?.[i]
         
         // 🛡️ SAFETY CHECK: Ensure currentHand is valid before processing
         if (!currentHand || !Array.isArray(currentHand) || currentHand.length < 21) {
@@ -28695,8 +28706,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         // Keep this hand if it's not a duplicate
         if (!isDuplicate) {
           deduplicatedLandmarks.push(currentHand)
-          if (currentHandedness) {
-            deduplicatedHandedness.push(currentHandedness)
+          if (currentZoneData) {
+            deduplicatedZoneData.push(currentZoneData)
           }
         }
       }
@@ -28712,11 +28723,11 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         }
       }
       
-      // Return deduplicated hands object
+      // Return deduplicated hands object with zone data
       return {
         ...hands,
         multiHandLandmarks: deduplicatedLandmarks,
-        multiHandedness: deduplicatedHandedness.length > 0 ? deduplicatedHandedness : handednessArray
+        zoneData: deduplicatedZoneData.length > 0 ? deduplicatedZoneData : zoneDataArray
       }
     }
 
@@ -32498,37 +32509,46 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
             this.handsDetected = results.multiHandLandmarks ? results.multiHandLandmarks.length : 0;
             this.landmarksCount = this.handsDetected * 21; // 21 landmarks per hand
             
-            if (results.multiHandLandmarks && results.multiHandedness) {
-                // Draw hand landmarks and connections
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                // Draw hand landmarks and connections using zone-based detection
                 for (let i = 0; i < results.multiHandLandmarks.length; i++) {
                     const landmarks = results.multiHandLandmarks[i];
-                    const handedness = results.multiHandedness[i];
+                    
+                    // 🎯 ZONE-BASED DETECTION: Determine zone from wrist position
+                    const wrist = landmarks[0]; // Wrist is landmark 0
+                    const pinchX = wrist ? 1.0 - wrist.x : 0.5; // Mirror correction with fallback
+                    const zoneLabel = pinchX < 0.5 ? 'Zone 1 (Left)' : 'Zone 2 (Right)';
                     
                     if (this.showConnections) {
-                        this.drawConnections(landmarks, handedness.label);
+                        this.drawConnections(landmarks, zoneLabel);
                     }
                     
                     if (this.showLandmarks) {
-                        this.drawLandmarks(landmarks, handedness.label);
+                        this.drawLandmarks(landmarks, zoneLabel);
                     }
                 }
                 
                 // 🎯 KEY: Send 21 landmarks per hand to biomechanical model
-                this.sendLandmarksToSystem(results.multiHandLandmarks, results.multiHandedness, now);
+                this.sendLandmarksToSystem(results.multiHandLandmarks, now);
             }
             
             this.canvasCtx.restore();
             this.updateStatusDisplay();
         }
 
-        sendLandmarksToSystem(multiHandLandmarks, multiHandedness, timestamp) {
-            // Convert MediaPipe format to system format
+        sendLandmarksToSystem(multiHandLandmarks, timestamp) {
+            // Convert MediaPipe format to system format using zone-based detection
             const hands = { left: null, right: null };
             
             for (let i = 0; i < multiHandLandmarks.length; i++) {
                 const landmarks = multiHandLandmarks[i];
-                const handedness = multiHandedness[i];
-                const handKey = handedness.label.toLowerCase(); // 'left' or 'right'
+                
+                // 🎯 ZONE-BASED DETECTION: Determine zone from wrist position
+                const wrist = landmarks[0]; // Wrist is landmark 0
+                if (!wrist) continue;
+                
+                const pinchX = 1.0 - wrist.x; // Mirror correction
+                const handKey = pinchX < 0.5 ? 'left' : 'right'; // Zone 1 (Left) or Zone 2 (Right)
                 
                 if (hands[handKey] === null) {
                     hands[handKey] = landmarks; // All 21 landmarks
@@ -32545,12 +32565,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
                 landmarksPerHand: 21
             });
             
-            // 🔧 NEW: Update provider with MediaPipe data for clean module access
+            // 🔧 NEW: Update provider with zone-based data for clean module access
             const providerData = {
                 multiHandLandmarks: [hands.left, hands.right].filter(h => h),
-                multiHandedness: [
-                    hands.left ? { label: 'Left' } : null,
-                    hands.right ? { label: 'Right' } : null
+                // 🎯 ZONE DATA: Replace handedness with zone information
+                zoneData: [
+                    hands.left ? { zoneId: 'zone-left', zoneName: 'Zone 1 (Left)', zoneIndex: 0 } : null,
+                    hands.right ? { zoneId: 'zone-right', zoneName: 'Zone 2 (Right)', zoneIndex: 1 } : null
                 ].filter(h => h),
                 timestamp
             };
@@ -33745,7 +33766,12 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         hand: 0,
         finger: 1,
         distance: 25.5,
-        state: 'active'
+        state: 'active',
+        // 🎯 ZONE DATA: Add zone data to test events to prevent Piano Genie bridge warnings
+        spatialZone: 1,
+        zoneName: 'Zone 1 (Left)',
+        zoneModifier: '(left)',
+        routingKey: '0-1(left)'
       })
       
       // Show stats
@@ -33762,12 +33788,23 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       const startMemory = performance.memory ? performance.memory.usedJSHeapSize : 0
       
       for (let i = 0; i < iterations; i++) {
+        const hand = i % 2;
+        const finger = i % 4;
+        const spatialZone = hand === 0 ? 1 : 2;
+        const zoneName = hand === 0 ? 'Zone 1 (Left)' : 'Zone 2 (Right)';
+        const zoneModifier = hand === 0 ? '(left)' : '(right)';
+        
         window.gcFreeOrchestrator.emit('pinchState', {
           action: 'pinchStart',
-          hand: i % 2,
-          finger: i % 4,
+          hand: hand,
+          finger: finger,
           distance: 20 + (i % 50),
-          state: 'active'
+          state: 'active',
+          // 🎯 ZONE DATA: Add zone data to test events to prevent Piano Genie bridge warnings
+          spatialZone: spatialZone,
+          zoneName: zoneName,
+          zoneModifier: zoneModifier,
+          routingKey: `${hand}-${finger}${zoneModifier}`
         })
       }
       
