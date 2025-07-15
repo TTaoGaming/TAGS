@@ -108,6 +108,94 @@
     📁 UnifiedSettingsManager fully initialized with all required categories (v25.7.14.2332)
     📁 PWA functionality cleanly disabled to prevent 404 errors (v25.7.14.2332)
 
+🔧 SURGICAL CLEANUP TODO LIST: Complete Zone Migration (v25.7.15+)
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+🎯 GOAL: Achieve 90%+ zone-only system readiness by eliminating ALL handedness contamination
+🚨 PROBLEM: Two-hand pinch detection is unreliable due to handedness system conflicts
+✅ APPROACH: Surgical cleanup preserving functionality while removing handedness artifacts
+
+📋 PHASE 1: Event System Cleanup
+    ✅ STEP 1: Remove hand parameter from pinchState events 
+        - Target: emitPinchEvent function
+        - Change: Remove hand:X from event data
+        - Test: Verify Piano Genie still receives zone data
+        - Risk: LOW (Piano Genie uses zone data, not hand data)
+
+    🔲 STEP 2: Update strategy function signatures
+        - Target: All strategy classes (piano, classic, off)
+        - Change: onPinchStart(hand,finger,data) → onPinchStart(zone,finger,data)
+        - Test: Verify strategy switching works
+        - Risk: MEDIUM (function signature changes require careful testing)
+
+📋 PHASE 2: UI & Visual System Cleanup  
+    🔲 STEP 3: Migrate UI labels (52 elements identified)
+        - Target: All "Left Hand"/"Right Hand" labels
+        - Change: "Left Hand" → "Zone 1 (Left)", "Right Hand" → "Zone 2 (Right)"
+        - Test: Visual verification of UI labels
+        - Risk: LOW (cosmetic changes only)
+
+    🔲 STEP 4: Update visual systems to use zones
+        - Target: Drawing functions, color mapping, anchor visualization
+        - Change: Use zone-based colors and identifiers
+        - Test: Verify visual feedback matches zone detection
+        - Risk: MEDIUM (affects user feedback systems)
+
+📋 PHASE 3: MIDI & Audio System Integration
+    🔲 STEP 5: Implement zone-based MIDI channel mapping
+        - Target: MIDI output configuration
+        - Change: Map channels to zones instead of hands
+        - Test: Verify MIDI output per zone
+        - Risk: MEDIUM (affects external MIDI routing)
+
+    🔲 STEP 6: Add zone-based sound library mapping  
+        - Target: Audio engine configuration
+        - Change: Different instruments per zone
+        - Test: Verify audio playback per zone
+        - Risk: MEDIUM (affects audio functionality)
+
+📋 PHASE 4: MediaPipe Integration Cleanup
+    🔲 STEP 7: Remove MediaPipe handedness references
+        - Target: All multiHandedness and handedness usage
+        - Change: Use pure position-based zone detection
+        - Test: Verify two-hand detection improvement
+        - Risk: HIGH (affects core hand tracking - test thoroughly)
+
+    🔲 STEP 8: Update debug messages to use zone terminology
+        - Target: All console.log and Logger calls
+        - Change: Replace "hand" with "zone" terminology
+        - Test: Verify debug output clarity
+        - Risk: LOW (debug messages only)
+
+📋 PHASE 5: Final Validation & Documentation
+    🔲 STEP 9: Comprehensive multi-hand testing
+        - Target: Two-hand pinch detection reliability
+        - Test: Verify pinch works reliably with both hands
+        - Risk: LOW (validation only)
+
+    🔲 STEP 10: Update documentation and version
+        - Target: Header documentation, version numbers
+        - Change: Update to reflect zone-centric architecture
+        - Test: Verify documentation accuracy
+        - Risk: LOW (documentation only)
+
+🧪 TESTING CHECKPOINTS:
+    ✅ After Steps 1-2: Piano Genie functionality preserved
+    ✅ After Steps 3-4: UI shows zone terminology, visual feedback works
+    ✅ After Steps 5-6: MIDI and audio routing by zone
+    ✅ After Steps 7-8: Two-hand pinch detection improved
+    ✅ After Steps 9-10: System 90%+ zone-ready
+
+🎯 SUCCESS METRICS:
+    - Zero "hand" references in event data
+    - UI consistently shows zone terminology
+    - Two-hand pinch detection reliability matches single-hand
+    - MIDI channels map to zones
+    - Audio libraries can be zone-specific
+    - Visual systems use zone-based identifiers
+
+💡 CURRENT STATUS: Ready to begin Step 1 - Remove hand parameter from events
+
 🤖 FOR AI CODING ASSISTANTS: CRITICAL COLLABORATION GUIDELINES  
 ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
@@ -8426,89 +8514,89 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         
         // ✅ PURE EVENT-DRIVEN ARCHITECTURE with ZONE ENRICHMENT - NO DIRECT CALLS
         if (window.gcFreeOrchestrator) {
-          // 🚀 EMIT ZONE-ENRICHED PINCH STATE EVENT (CRITICAL PATH)
-          window.gcFreeOrchestrator.emit('pinchState', {
-            action: eventType,
-            hand: data.hand,
+                  // 🚀 EMIT ZONE-ENRICHED PINCH STATE EVENT (CRITICAL PATH)
+        window.gcFreeOrchestrator.emit('pinchState', {
+          action: eventType,
+          finger: data.finger,
+          distance: data.distance,
+          state: data.state,
+          coordinates: data.coordinates,
+          isTracking: data.isTracking,
+          isPredicted: data.isPredicted,
+          predictionConfidence: data.predictionConfidence,
+          // 🎯 NEW: Spatial zone enrichment for zone-aware audio routing
+          spatialZone: zoneInfo.zone,
+          zoneName: zoneInfo.zoneName,
+          zoneModifier: zoneInfo.zoneModifier,
+          routingKey: `zone${zoneInfo.zone}-${data.finger}${zoneInfo.zoneModifier}`
+        })
+          
+                  // 🚀 EMIT ZONE-AWARE AUDIO EVENT (CRITICAL PATH - IMMEDIATE)  
+        window.gcFreeOrchestrator.emit('audio', {
+          action: eventType,
+          finger: data.finger,
+          instrument: 'current', // Will be resolved by audio system
+          // 🎯 NEW: Zone-based audio routing
+          spatialZone: zoneInfo.zone,
+          zoneName: zoneInfo.zoneName,
+          routingKey: `zone${zoneInfo.zone}-${data.finger}${zoneInfo.zoneModifier}`
+        })
+          
+                  // 🚀 EMIT MIDI EVENT (CRITICAL PATH - IMMEDIATE)
+        window.gcFreeOrchestrator.emit('midi', {
+          action: eventType,
+          finger: data.finger,
+          distance: data.distance,
+          // 🎯 NEW: Zone information for MIDI routing
+          spatialZone: zoneInfo.zone,
+          routingKey: `zone${zoneInfo.zone}-${data.finger}${zoneInfo.zoneModifier}`
+        })
+          
+                  // 🚀 EMIT UI EVENT (BATCHED - NON-CRITICAL)
+        window.gcFreeOrchestrator.emit('ui', {
+          action: 'updateStatus',
+          data: {
+            eventType,
             finger: data.finger,
             distance: data.distance,
-            state: data.state,
-            coordinates: data.coordinates,
-            isTracking: data.isTracking,
             isPredicted: data.isPredicted,
             predictionConfidence: data.predictionConfidence,
-            // 🎯 NEW: Spatial zone enrichment for zone-aware audio routing
+            // 🎯 NEW: Zone UI feedback
             spatialZone: zoneInfo.zone,
-            zoneName: zoneInfo.zoneName,
-            zoneModifier: zoneInfo.zoneModifier,
-            routingKey: `${data.hand}-${data.finger}${zoneInfo.zoneModifier}`
-          })
+            zoneName: zoneInfo.zoneName
+          }
+        })
           
-          // 🚀 EMIT ZONE-AWARE AUDIO EVENT (CRITICAL PATH - IMMEDIATE)  
-          window.gcFreeOrchestrator.emit('audio', {
-            action: eventType,
-            hand: data.hand,
-            finger: data.finger,
-            instrument: 'current', // Will be resolved by audio system
-            // 🎯 NEW: Zone-based audio routing
-            spatialZone: zoneInfo.zone,
-            zoneName: zoneInfo.zoneName,
-            routingKey: `${data.hand}-${data.finger}${zoneInfo.zoneModifier}`
-          })
-          
-          // 🚀 EMIT MIDI EVENT (CRITICAL PATH - IMMEDIATE)
-          window.gcFreeOrchestrator.emit('midi', {
-            action: eventType,
-            hand: data.hand,
+                  // 🚀 EMIT ANALYTICS EVENT (BATCHED - NON-CRITICAL)
+        window.gcFreeOrchestrator.emit('analytics', {
+          category: 'pinch',
+          data: {
+            eventType,
             finger: data.finger,
             distance: data.distance,
-            // 🎯 NEW: Zone information for MIDI routing
+            isPredicted: data.isPredicted,
+            // 🎯 NEW: Zone analytics
             spatialZone: zoneInfo.zone,
-            routingKey: `${data.hand}-${data.finger}${zoneInfo.zoneModifier}`
-          })
+            zoneName: zoneInfo.zoneName
+          }
+        })
           
-          // 🚀 EMIT UI EVENT (BATCHED - NON-CRITICAL)
-          window.gcFreeOrchestrator.emit('ui', {
-            action: 'updateStatus',
+                  // 🌉 EMIT BRIDGE EVENT (for gesture keyboard bridge)
+        const targetWindow = (window.parent && window.parent !== window) ? window.parent : window.opener;
+        if (targetWindow) {
+          const bridgeData = {
+            type: 'gesture-keyboard',
+            eventType: 'pinch',
             data: {
-              eventType,
-              hand: data.hand,
               finger: data.finger,
-              distance: data.distance,
-              isPredicted: data.isPredicted,
-              predictionConfidence: data.predictionConfidence,
-              // 🎯 NEW: Zone UI feedback
+              isPinched: eventType === 'pinchStart',
+              // 🎯 NEW: Zone-based bridge data
               spatialZone: zoneInfo.zone,
               zoneName: zoneInfo.zoneName
             }
-          })
-          
-          // 🚀 EMIT ANALYTICS EVENT (BATCHED - NON-CRITICAL)
-          window.gcFreeOrchestrator.emit('analytics', {
-            category: 'pinch',
-            data: {
-              eventType,
-              hand: data.hand,
-              finger: data.finger,
-              distance: data.distance,
-              isPredicted: data.isPredicted
-            }
-          })
-          
-          // 🌉 EMIT BRIDGE EVENT (for gesture keyboard bridge)
-          const targetWindow = (window.parent && window.parent !== window) ? window.parent : window.opener;
-          if (targetWindow) {
-            const bridgeData = {
-              type: 'gesture-keyboard',
-              eventType: 'pinch',
-              data: {
-                hand: data.hand,
-                finger: data.finger,
-                isPinched: eventType === 'pinchStart'
-              }
-            };
-            targetWindow.postMessage(bridgeData, '*');
-          }
+          };
+          targetWindow.postMessage(bridgeData, '*');
+        }
           
           // 🔇 THROTTLED: Musical events during active playing (prevent spam during performances)
           if (this.logger && this.logger.throttle) {
@@ -30716,13 +30804,13 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       emitPinchEvent(eventType, data) {
         // 🔍 BYPASS THROTTLING: Direct console.log for debugging (PREVENT RESTART)
         try {
-          console.log(`🔍 EMIT CALLED: ${eventType} hand=${data?.hand} finger=${data?.finger}`);
+          console.log(`🔍 EMIT CALLED: ${eventType} finger=${data?.finger}`);
         } catch (e) {
           // Prevent console errors from causing restarts
         }
         
         // ✅ FIX: Add comprehensive null/undefined data validation to prevent UI event spam
-        if (!data || data.hand === undefined || data.finger === undefined) {
+        if (!data || data.finger === undefined) {
           Logger.system(`⚠️ emitPinchEvent called with invalid data: ${JSON.stringify(data)}`)
           return
         }
@@ -30750,18 +30838,17 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
             3000
           );
         } else {
-          // ✅ CONSISTENT FALLBACK: Use position-based zone detection even without coordinates
-          // Always use position-based detection to avoid hand-based conflicts
-          pinchX = data.hand === 0 ? 0.25 : 0.75; // Approximate position for missing coordinates
-          zoneInfo.zone = pinchX < 0.5 ? 1 : 2;
-          zoneInfo.zoneName = pinchX < 0.5 ? 'Zone 1 (Left)' : 'Zone 2 (Right)';
-          zoneInfo.zoneModifier = pinchX < 0.5 ? '(left)' : '(right)';
-          zoneInfo.routingKey = `${data.hand}-${data.finger}${zoneInfo.zoneModifier}`;
+          // ✅ CONSISTENT FALLBACK: Use center position when coordinates are missing
+          // This avoids hand-based conflicts and provides neutral zone detection
+          pinchX = 0.5; // Center position - neutral zone detection
+          zoneInfo.zone = 2; // Default to Zone 2 when coordinates are missing
+          zoneInfo.zoneName = 'Zone 2 (Right)';
+          zoneInfo.zoneModifier = '(right)';
           
           Logger.throttle(
-            `zone-fallback-${data.hand}-${data.finger}`,
+            `zone-fallback-${data.finger}`,
             'system',
-            `⚠️ Zone fallback: [${zoneInfo.zoneName}] Hand ${data.hand + 1} ${eventType} (coordinates missing - using position-based detection)`,
+            `⚠️ Zone fallback: [${zoneInfo.zoneName}] Finger ${data.finger + 1} ${eventType} (coordinates missing - using center position)`,
             5000
           );
         }
@@ -30775,14 +30862,12 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
           pinchX: pinchX,
           fullZoneInfo: zoneInfo,
           eventType: eventType,
-          hand: data.hand,
           finger: data.finger
         });
         
         // 🚀 EMIT ZONE-ENRICHED PINCH STATE EVENT (CRITICAL PATH - IMMEDIATE)
         const emitData = {
           action: eventType,
-          hand: data.hand,
           finger: data.finger,
           distance: data.distance,
           state: data.state,
@@ -30797,7 +30882,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
           spatialZone: zoneInfo.zone,
           zoneName: zoneInfo.zoneName,
           zoneModifier: zoneInfo.zoneModifier,
-          routingKey: zoneInfo.routingKey
+          routingKey: `zone${zoneInfo.zone}-${data.finger}${zoneInfo.zoneModifier}`
         };
         
         // 🔍 DEBUG: What are we actually emitting?
@@ -30809,19 +30894,18 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         if (!window.disableAudioSystem) {
           window.gcFreeOrchestrator.emit('audio', {
             action: eventType,
-            hand: data.hand,
             finger: data.finger,
             instrument: 'current', // Will be resolved by audio system
             // 🎯 NEW: Zone-based audio routing
             spatialZone: zoneInfo.zone,
             zoneName: zoneInfo.zoneName,
-            routingKey: zoneInfo.routingKey
+            routingKey: `zone${zoneInfo.zone}-${data.finger}${zoneInfo.zoneModifier}`
           })
         }
         
-        // ✅ WIRED: Update live key activity indicators
+        // ✅ WIRED: Update live key activity indicators (using zone-based mapping)
         if (typeof updateKeyActivityIndicator === 'function' && typeof getFingerKey === 'function') {
-          const fingerKey = getFingerKey(data.hand, data.finger)
+          const fingerKey = getFingerKey(zoneInfo.zone, data.finger)
           if (fingerKey) {
             updateKeyActivityIndicator(fingerKey, eventType === 'pinchStart')
           }
@@ -30831,12 +30915,11 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         if (!window.disableMIDISystem) {
           window.gcFreeOrchestrator.emit('midi', {
             action: eventType,
-            hand: data.hand,
             finger: data.finger,
             distance: data.distance,
             // 🎯 NEW: Zone information for MIDI routing
             spatialZone: zoneInfo.zone,
-            routingKey: zoneInfo.routingKey
+            routingKey: `zone${zoneInfo.zone}-${data.finger}${zoneInfo.zoneModifier}`
           })
         }
         
@@ -30845,7 +30928,6 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
           action: 'updateStatus',
           data: {
             eventType,
-            hand: data.hand,
             finger: data.finger,
             distance: data.distance,
             isPredicted: data.isPredicted,
@@ -30861,10 +30943,12 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
           category: 'pinch',
           data: {
             eventType,
-            hand: data.hand,
             finger: data.finger,
             distance: data.distance,
-            isPredicted: data.isPredicted
+            isPredicted: data.isPredicted,
+            // 🎯 NEW: Zone analytics
+            spatialZone: zoneInfo.zone,
+            zoneName: zoneInfo.zoneName
           }
         })
         
@@ -30876,9 +30960,11 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
             type: 'gesture-keyboard',
             eventType: 'pinch',
             data: {
-              hand: data.hand,
               finger: data.finger,
-              isPinched: eventType === 'pinchStart'
+              isPinched: eventType === 'pinchStart',
+              // 🎯 NEW: Zone-based bridge data
+              spatialZone: zoneInfo.zone,
+              zoneName: zoneInfo.zoneName
             }
           };
           targetWindow.postMessage(bridgeData, '*');
@@ -30887,9 +30973,9 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         
         // 🔇 THROTTLED: Musical events during active playing (prevent spam during performances)
         Logger.throttle(
-          `musical-events-${data.hand}-${data.finger}`,
+          `musical-events-${zoneInfo.zone}-${data.finger}`,
           'system',
-          `🎵 ${eventType}: Hand ${data.hand + 1} Finger ${data.finger + 1} (${data.distance.toFixed(1)}mm)`,
+          `🎵 ${eventType}: [${zoneInfo.zoneName}] Finger ${data.finger + 1} (${data.distance.toFixed(1)}mm)`,
           2000
         )
       }
