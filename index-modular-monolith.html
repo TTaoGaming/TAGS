@@ -10,10 +10,21 @@
 
 📡 CORE CONCEPT: Smartphone Camera → 3D Biomechanical Hand Model → Universal Spatial Input System
 
+🎯 **CURRENT TRACKING SYSTEM**: HandsFree.js (STABLE - Production Ready)
+📊 **FUTURE TRACKING SYSTEM**: MediaPipe 3D (WIP - Work In Progress)
+
+⚠️ **CAMERA SYSTEM STATUS (v25.7.15.1400)**:
+    🟢 **ACTIVE**: HandsFree.js → MediaPipe wrapper → 60fps hand tracking (STABLE)
+    🟡 **WIP**: Direct MediaPipe 3D → True 3D coordinates → Enhanced biomechanical constraints (FUTURE)
+    
+    **Current Choice**: HandsFree.js is proven stable and performant for production use
+    **Future Plan**: Transition to direct MediaPipe when BiomechanicalHandManager bridge is complete
+    **Architecture**: Designed for seamless transition via HandTrackingDataProvider abstraction
+
 🚀 SYSTEM ARCHITECTURE:
 
 LAYER 1: BIOMECHANICAL HAND TRACKING
-    • Mid-range smartphone camera input
+    • Mid-range smartphone camera input (HandsFree.js current, MediaPipe future)
     • 3D hand model with biomechanical constraints for stability
     • Real-time hand mesh recovery and pose estimation (72 FPS capable)
     • AR hand representation for downstream applications
@@ -44,6 +55,27 @@ LAYER 4: FUTURE-READY ARCHITECTURE
     • EgoHand (2025): 3D hand forecasting both in/out of field of view
 
 🎯 ULTIMATE GOAL: Universal Spatial Computing Interface Framework for AR/VR applications
+
+📊 **DATA FLOW ARCHITECTURE** (Transition Ready):
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+**CURRENT (HandsFree.js - WORKING)**:
+```
+🎥 HandsFree.js Camera → HandTrackingDataProvider → BiomechanicalHandModule → [MISSING BRIDGE] → Gesture System → Output
+```
+
+**DESIRED (Universal Pipeline - IN PROGRESS)**:
+```
+🎥 Hand Tracking (Any Source) → BiomechanicalHandModel → Gesture Recognition → Output Systems
+    ↑                              ↑                      ↑                    ↑
+HandsFree.js OR MediaPipe    Per-Hand Calibration    Universal Gestures    Audio/MIDI/Spatial
+```
+
+**BRIDGE COMPLETION STATUS**:
+    ✅ BiomechanicalHandManager EXISTS (lines 8270+)  
+    🔧 **IN PROGRESS**: Connect per-hand thresholds to pinch detection pipeline
+    ❌ **MISSING**: Gesture System → BiomechanicalHandModel integration
+    ❌ **MISSING**: MediaPipe 3D coordinate integration (WIP)
 
 📄 FILE: index-modular-monolith.html (SELF-CONTAINED MONOLITH v25.7.15.1400 - PRODUCTION READY)
 🎯 PURPOSE: Universal Biomechanical Spatial Computing Interface - 5W+H Gesture Framework
@@ -6834,6 +6866,117 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       VIDEO_FRAME: 'video-frame'
     }
 
+    // =============================================
+    // 🎯 COMPREHENSIVE CONSTANTS SYSTEM - Magic Number Elimination
+    // =============================================
+    
+    const SYSTEM_CONSTANTS = {
+      // ===== CAMERA & TRACKING =====
+      CAMERA: {
+        // HandsFree.js Configuration (Current System)
+        HANDSFREE: {
+          RESOLUTION_WIDTH: 1280,
+          RESOLUTION_HEIGHT: 720,
+          ASPECT_RATIO: 16/9,
+          MAX_HANDS: 2,
+          MODEL_COMPLEXITY: 1,
+          MIN_DETECTION_CONFIDENCE: 0.7,    // Was hardcoded throughout
+          MIN_TRACKING_CONFIDENCE: 0.6,     // Was hardcoded throughout
+          SHOW_DEBUG: true
+        },
+        
+        // MediaPipe Configuration (WIP - Future System)
+        MEDIAPIPE: {
+          RESOLUTION_WIDTH: 1280,
+          RESOLUTION_HEIGHT: 720,
+          MAX_HANDS: 2,
+          MODEL_COMPLEXITY: 1,
+          MIN_DETECTION_CONFIDENCE: 0.5,    // MediaPipe defaults
+          MIN_TRACKING_CONFIDENCE: 0.5,     // MediaPipe defaults
+          ENABLE_3D_COORDINATES: true       // Future enhancement
+        }
+      },
+      
+      // ===== PERFORMANCE & TIMING =====
+      PERFORMANCE: {
+        TARGET_FPS: 60,
+        FRAME_PROCESSING_TIMEOUT_MS: 16,   // ~60fps = 16.67ms per frame
+        EVENT_THROTTLE_MS: 100,            // Was hardcoded as 100
+        STABILITY_CHECK_INTERVAL_MS: 200,  // Was hardcoded as 200
+        SETTINGS_SAVE_DEBOUNCE_MS: 300,    // Was hardcoded as 300
+        UI_UPDATE_THROTTLE_MS: 50,         // Was hardcoded as 50
+        ANALYTICS_BATCH_INTERVAL_MS: 1000, // Was hardcoded as 1000
+        CONSOLE_SPAM_PREVENTION_MS: 2000   // Was hardcoded as 2000
+      },
+      
+      // ===== GESTURE DETECTION =====
+      GESTURES: {
+        PINCH: {
+          // Global defaults (will be replaced by per-hand biomechanical values)
+          DEFAULT_TRIGGER_DISTANCE_MM: 35,  // Was hardcoded as 35
+          DEFAULT_RELEASE_DISTANCE_MM: 55,  // Was hardcoded as 55
+          STABILITY_FRAME_COUNT: 5,         // Was hardcoded as 5
+          HYSTERESIS_THRESHOLD: 1.5,        // Was hardcoded as 1.5
+          MIN_GESTURE_DURATION_MS: 50       // Was hardcoded as 50
+        },
+        
+        VELOCITY: {
+          MAX_SPEED_MM_PER_SECOND: 200,     // Was hardcoded as 200
+          SMOOTHING_FACTOR: 0.3,            // Was hardcoded as 0.3
+          DEADZONE_MM_PER_SECOND: 5,        // Was hardcoded as 5
+          PREDICTION_LOOKAHEAD_MS: 100      // Was hardcoded as 100
+        }
+      },
+      
+      // ===== SPATIAL SYSTEM =====
+      SPATIAL: {
+        ANCHORS: {
+          DEFAULT_HOLD_TIME_MS: 300,        // Was hardcoded as 300
+          MAX_ANCHORS: 16,                  // Was hardcoded as 16
+          MOVEMENT_THRESHOLD_MM: 10,        // Was hardcoded as 10
+          RELEASE_CONFIRMATION_MS: 250      // Was hardcoded as 250
+        },
+        
+        ZONES: {
+          SPLIT_POSITION: 0.5,              // Was hardcoded as 0.5
+          TRANSITION_THROTTLE_MS: 200,      // Was hardcoded as 200
+          CONFIDENCE_THRESHOLD: 1.0         // Always 1.0 for position-based
+        }
+      },
+      
+      // ===== OUTPUT SYSTEMS =====
+      OUTPUT: {
+        AUDIO: {
+          SAMPLE_RATE: 44100,
+          BASE_VOLUME: 0.8,                 // Was hardcoded as 0.8
+          RELEASE_TIMEOUT_PERCUSSIVE_MS: 150,  // Was hardcoded as 150
+          RELEASE_TIMEOUT_SUSTAINED_MS: 1200,  // Was hardcoded as 1200
+          RELEASE_TIMEOUT_CONTINUOUS_MS: 200   // Was hardcoded as 200
+        },
+        
+        MIDI: {
+          DEFAULT_VELOCITY: 100,            // Was hardcoded as 100
+          CHANNEL_COUNT: 16,
+          NOTE_RANGE_MIN: 21,               // A0
+          NOTE_RANGE_MAX: 116,              // G#8
+          MPE_MASTER_CHANNEL: 1,
+          MPE_VOICE_CHANNELS_START: 2       // Channels 2-15
+        }
+      },
+      
+      // ===== UI & VISUAL =====
+      UI: {
+        PANEL_WIDTH: 380,                   // Was hardcoded as 380
+        PANEL_OFFSET: 190,                  // Was hardcoded as 190
+        MOBILE_BREAKPOINT: 768,             // Was hardcoded as 768
+        ACCORDION_TRANSITION_MS: 300,       // Was hardcoded as 300
+        STATUS_UPDATE_INTERVAL_MS: 100,     // Was hardcoded as 100
+        VISUALIZATION_UPDATE_MS: 16,        // ~60fps updates
+        Z_INDEX_OVERLAY: 1000,              // Was hardcoded as 1000
+        Z_INDEX_MODAL: 10000                // Was hardcoded as 10000
+      }
+    }
+
     // Make constants available globally for backward compatibility
     window.HAND_TRACKING = HAND_TRACKING;
     window.PRECISION_PINCH = PRECISION_PINCH;
@@ -6848,6 +6991,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
     window.LAYOUT_CONSTANTS = LAYOUT_CONSTANTS;
     window.DEBUG_CONSTANTS = DEBUG_CONSTANTS;
     window.TESTING_CONSTANTS = TESTING_CONSTANTS;
+    // 🎯 COMPREHENSIVE SYSTEM CONSTANTS - v25.7.15.1400 Magic Number Elimination
+    window.SYSTEM_CONSTANTS = SYSTEM_CONSTANTS;
 
     /**
      * Master Configuration Object - All system settings in one place
