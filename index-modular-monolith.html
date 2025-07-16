@@ -56,31 +56,68 @@ LAYER 4: FUTURE-READY ARCHITECTURE
 
 🎯 ULTIMATE GOAL: Universal Spatial Computing Interface Framework for AR/VR applications
 
-📊 **DATA FLOW ARCHITECTURE** (Transition Ready):
+📊 **ARCHITECTURE ABSTRACTION LAYERS** (Clean Separation Design):
 ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-**CURRENT (HandsFree.js - WORKING)**:
+**🚨 CURRENT REALITY (What's Actually Working)**:
 ```
-🎥 HandsFree.js Camera → HandTrackingDataProvider → BiomechanicalHandModule → [MISSING BRIDGE] → Gesture System → Output
+🎥 HandsFree.js Camera → HandTrackingDataProvider → ❌ BYPASS BiomechanicalHandManager 
+                                                      ↓
+                                               👉 Direct Pinch Detection (HARDCODED: 0.5/0.3)
+                                                      ↓
+                                               🎵 Event System → Audio/MIDI/Spatial Outputs
+```
+⚠️ **Problem**: No abstraction layer - coordinate system directly connects to gesture detection
+
+**🎯 DESIRED ARCHITECTURE (Proper Abstraction Layers)**:
+```
+Layer 1: 🎥 Hand Coordinate Provider
+         ├── HandsFree.js (CURRENT - STABLE)
+         └── MediaPipe 3D (FUTURE - WIP)
+                    ↓
+Layer 2: 🦴 BiomechanicalHandModel (NEEDS CONNECTION)
+         ├── Per-hand calibration with unique hash IDs
+         ├── Hand identity persistence across 3D movement  
+         └── Biomechanical constraints & hand size adaptation
+                    ↓
+Layer 3: 🎯 Gesture Recognition System (NEEDS ABSTRACTION)
+         ├── Pinch Detection (using BiomechanicalHandModel thresholds)
+         ├── Velocity Calculation (hand-specific)
+         └── Spatial Gesture Recognition
+                    ↓
+Layer 4: 🎵 Output Systems (WORKING)
+         ├── Audio Engine (9 instruments)
+         ├── MIDI/MPE Output (DAW integration)
+         └── Spatial Anchors (3D positioning)
 ```
 
-**DESIRED (Universal Pipeline - IN PROGRESS)**:
-```
-🎥 Hand Tracking (Any Source) → BiomechanicalHandModel → Gesture Recognition → Output Systems
-    ↑                              ↑                      ↑                    ↑
-HandsFree.js OR MediaPipe    Per-Hand Calibration    Universal Gestures    Audio/MIDI/Spatial
-```
+**🔧 CRITICAL MISSING BRIDGE**:
+HandTrackingDataProvider → BiomechanicalHandModel → Gesture Recognition
+          ↑                        ↑                       ↑
+    (Coordinates)         (Per-Hand Calibration)    (Threshold Detection)
 
-**BRIDGE COMPLETION STATUS**:
-    ✅ BiomechanicalHandManager EXISTS (lines 8270+)  
-    🔧 **IN PROGRESS**: Connect per-hand thresholds to pinch detection pipeline
-    ❌ **MISSING**: Gesture System → BiomechanicalHandModel integration
-    ❌ **MISSING**: MediaPipe 3D coordinate integration (WIP)
+**Status**: 
+    ✅ Layer 1: HandsFree.js coordinate provider (WORKING)
+    ❌ Layer 2: BiomechanicalHandManager exists but NOT CONNECTED 
+    ❌ Layer 3: Gesture detection bypasses Layer 2 (BROKEN ABSTRACTION)
+    ✅ Layer 4: Output systems working (STABLE)
+
+**🧪 TESTING STATUS**:
+    ✅ **App Currently Works**: HandsFree.js → Direct Gesture Detection → Output (functional but not clean)
+    🔧 **Ready for Testing After**: Layer 2 → Layer 3 bridge connection implemented
+    ⚠️ **BiomechanicalHandManager Status**: EXISTS as dead code - never instantiated or connected
+
+**📋 NEXT STEPS (Priority Order)**:
+    1. 🎯 **IMMEDIATE**: Complete magic number elimination (SYSTEM_CONSTANTS)
+    2. 🔧 **CRITICAL**: Implement HandTrackingDataProvider → BiomechanicalHandModel bridge
+    3. 🎯 **ESSENTIAL**: Connect BiomechanicalHandModel → Gesture Recognition System  
+    4. 🧪 **TESTING**: Verify app works with proper abstraction layers
+    5. 🚀 **FUTURE**: Add MediaPipe 3D coordinate integration
 
 📄 FILE: index-modular-monolith.html (SELF-CONTAINED MONOLITH v25.7.15.1400 - PRODUCTION READY)
 🎯 PURPOSE: Universal Biomechanical Spatial Computing Interface - 5W+H Gesture Framework
 📊 ARCHITECTURE: Event-Driven Modular Monolith (95% Event-Based) + BiomechanicalHandManager + Universal Output System
-📅 VERSION: v25.7.15.1400 (Format: YY.M.DD.HHMM) - July 15, 2025, 2:00 PM (BiomechanicalHandManager Integration + 5W+H Framework + Documentation Update)
+📅 VERSION: v25.7.15.1915 (Format: YY.M.DD.HHMM) - July 15, 2025, 7:15 PM (Magic Number Elimination + Architecture Documentation + SYSTEM_CONSTANTS Integration)
 
 👥 FOR USERS: HOW TO USE THIS MUSICAL INSTRUMENT
 ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -2190,7 +2227,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
     <div class="welcome-section">
       <div class="panel-header">
         <div class="panel-title">
-          <h2>TAGS <span class="version-badge" id="versionBadge">v25.7.15.1400</span></h2>
+                          <h2>TAGS <span class="version-badge" id="versionBadge">v25.7.15.1915</span></h2>
           <p>Tectangle Audio Gesture Studio</p>
         </div>
         <button class="panel-close-btn" id="panelToggle" onclick="toggleSidePanel()" title="Hide Control Panel" aria-label="Close navigation panel" style="display: none;">
@@ -3828,7 +3865,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                   <label for="velocityMaxSpeedInput" style="font-size: 11px; color: #999;">Max Speed</label>
                   <div style="display: flex; align-items: center; gap: 8px;">
-                    <input type="number" id="velocityMaxSpeedInput" value="200" min="50" max="500" step="25"
+                    <input type="number" id="velocityMaxSpeedInput" value="250" min="50" max="500" step="25"
                            title="Maximum gesture speed for full musical velocity"
                            style="width: 60px; padding: 2px; border: 1px solid #555; border-radius: 3px; background: #333; color: #fff; font-size: 11px;"
                            onchange="updateVelocitySettings()" />
@@ -4049,7 +4086,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
                          <label style="color: #4ecdc4; font-weight: 500; font-size: 11px; display: block; margin-bottom: 4px;">
                            Timbre Deadzone: <span id="timbreDeadzoneValue">3.0%</span>
                          </label>
-                         <input type="range" id="timbreDeadzone" min="0" max="100" value="30" step="1"
+                         <input type="range" id="timbreDeadzone" min="0" max="100" value="15" step="1"
                                 onchange="updateDeadzoneValue('timbre', this.value)"
                                 style="width: 100%; accent-color: #4ecdc4;">
                        </div>
@@ -4059,7 +4096,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
                          <label style="color: #ffb347; font-weight: 500; font-size: 11px; display: block; margin-bottom: 4px;">
                            Volume Deadzone: <span id="pressureDeadzoneValue">2.5%</span>
                          </label>
-                         <input type="range" id="pressureDeadzone" min="0" max="100" value="25" step="1"
+                         <input type="range" id="pressureDeadzone" min="0" max="100" value="15" step="1"
                                 onchange="updateDeadzoneValue('pressure', this.value)"
                                 style="width: 100%; accent-color: #ffb347;">
                        </div>
@@ -4589,10 +4626,10 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
               <div class="setting-row">
                 <label class="setting-label">Hold Time</label>
                 <select id="anchorHoldTime" onchange="updateAnchorSettings()" class="setting-selector">
-                  <option value="200">200ms (Fast)</option>
-                  <option value="300" selected>300ms (Default)</option>
-                  <option value="500">500ms (Deliberate)</option>
-                  <option value="1000">1000ms (Very Deliberate)</option>
+                                    <option value="500">500ms (Fast)</option>
+                  <option value="1000" selected>1000ms (Default)</option>
+                  <option value="2000">2000ms (Deliberate)</option>
+                  <option value="3000">3000ms (Very Deliberate)</option>
                 </select>
               </div>
               
@@ -5281,7 +5318,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
                   <div class="control-description" style="font-size: 10px; color: #999; margin-top: 2px;">Minimum velocity to trigger prediction</div>
                 </div>
                 <div class="control-input" style="display: flex; align-items: center; gap: 8px;">
-                  <input type="range" id="velocity-approach-threshold" min="50" max="200" value="80" 
+                  <input type="range" id="velocity-approach-threshold" min="50" max="200" value="100" 
                          style="width: 120px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #fff; padding: 6px 8px; font-size: 12px;"
                          oninput="updateVelocityThreshold(this.value)" />
                   <span class="unit-label" id="velocity-threshold-value" style="font-size: 11px; color: #999;">80 mm/s</span>
@@ -5442,7 +5479,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
                   <div class="control-description" style="font-size: 10px; color: #999; margin-top: 2px;">Distance to release the pinch</div>
                 </div>
                 <div class="control-input" style="display: flex; align-items: center; gap: 8px;">
-                  <input type="range" id="pinch-release-threshold" min="30" max="80" value="45" 
+                  <input type="range" id="pinch-release-threshold" min="30" max="80" value="50" 
                          style="width: 120px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #fff; padding: 6px 8px; font-size: 12px;"
                          oninput="updatePinchRelease(this.value)" />
                   <span class="unit-label" id="release-value" style="font-size: 11px; color: #999;">45mm</span>
@@ -5988,13 +6025,15 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         return;
       }
       
-      // 🔇 THROTTLED: Accordion order updates during UI interactions
-      Logger.throttle(
-        'accordion-order-updates',
-        'system',
-        `🔄 Accordion order updated: ${accordionState.cardOrder.length} cards`,
-        3000
-      )
+      // 🔇 THROTTLED: Accordion order updates during UI interactions (defensive check)
+      if (typeof Logger !== 'undefined' && Logger.throttle) {
+        Logger.throttle(
+          'accordion-order-updates',
+          'system',
+          `🔄 Accordion order updated: ${accordionState.cardOrder.length} cards`,
+          3000
+        )
+      }
       
       accordionState.cardOrder.forEach((cardId, index) => {
         const card = document.querySelector(`[data-card-id="${cardId}"]`);
@@ -6752,23 +6791,30 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
     }
 
     // =============================================
+    // 🎯 EARLY VARIABLE DECLARATIONS - Prevent initialization order issues
+    // =============================================
+    
+    // FAB State Management (used in HTML onclick, must be declared early)
+    let fabState = 'idle' // idle, starting, loading, ready, hidden
+    
+    // =============================================
     // 📦 VERSION INFORMATION - Single Source of Truth
     // =============================================
     
     const VERSION_INFO = {
       // Current Version (YY.M.DD.HHMM format)
-              current: 'v25.7.15.1400',
+              current: 'v25.7.15.1915',
       
       // Semantic breakdown
       year: '25',
-      month: '6', 
-      day: '30',
-      time: '1459', // 2:59 PM
+      month: '7', 
+      day: '15',
+      time: '1915', // 7:15 PM
       
       // Full descriptive info
-      fullDate: 'June 30, 2025, 2:59 PM',
-      codename: 'MAGIC-NUMBER-ELIMINATION',
-      description: 'Complete Constants Consolidation + Magic Number Elimination',
+      fullDate: 'July 15, 2025, 7:15 PM',
+      codename: 'MAGIC-NUMBER-ELIMINATION-V2',
+      description: 'Complete Constants Consolidation + Final Magic Number Elimination',
       
       // Build info
       buildType: 'PRODUCTION READY',
@@ -6829,8 +6875,10 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
     // Update version displays when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', updateVersionDisplays)
+      document.addEventListener('DOMContentLoaded', syncUIConstantsToHTML)
     } else {
       updateVersionDisplays()
+      syncUIConstantsToHTML()
     }
     
     // =============================================
@@ -6910,7 +6958,10 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
       },
       
       // ===== GESTURE DETECTION =====
-      GESTURES: {
+      GESTURE: {
+        PINCH_ENGAGE_THRESHOLD: 0.5,       // Was hardcoded - More responsive (was 0.7)
+        PINCH_RELEASE_THRESHOLD: 0.3,      // Was hardcoded - More sticky (was 0.5)
+        
         PINCH: {
           // Global defaults (will be replaced by per-hand biomechanical values)
           DEFAULT_TRIGGER_DISTANCE_MM: 35,  // Was hardcoded as 35
@@ -6960,8 +7011,30 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
           NOTE_RANGE_MIN: 21,               // A0
           NOTE_RANGE_MAX: 116,              // G#8
           MPE_MASTER_CHANNEL: 1,
-          MPE_VOICE_CHANNELS_START: 2       // Channels 2-15
+          MPE_VOICE_CHANNELS_START: 2,      // Channels 2-15
+          
+          // Standard MIDI channels (for UI dropdowns)
+          CHANNELS: {
+            MIN: 1, MAX: 16,
+            DEFAULT_LEFT: 2,                // Left hand default
+            DEFAULT_RIGHT: 3,               // Right hand default  
+            DEFAULT_INDEX: 4,               // Index finger default
+            DEFAULT_MIDDLE: 5               // Middle finger default
+          },
+          
+          // Standard MIDI notes (C3 = 48 is common default)
+          NOTES: {
+            C3: 48, CS3: 49, D3: 50, DS3: 51, E3: 52, F3: 53,
+            FS3: 54, G3: 55, GS3: 56, A3: 57, AS3: 58, B3: 59, C4: 60
+          }
         }
+      },
+      
+      // ===== VERSION INFO =====
+      VERSION: {
+        CURRENT: 'v25.7.15.1915',
+        DATE: 'July 15, 2025, 7:15 PM',
+        DESCRIPTION: 'Magic Number Elimination + Architecture Documentation + SYSTEM_CONSTANTS Integration'
       },
       
       // ===== UI & VISUAL =====
@@ -6973,7 +7046,36 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         STATUS_UPDATE_INTERVAL_MS: 100,     // Was hardcoded as 100
         VISUALIZATION_UPDATE_MS: 16,        // ~60fps updates
         Z_INDEX_OVERLAY: 1000,              // Was hardcoded as 1000
-        Z_INDEX_MODAL: 10000                // Was hardcoded as 10000
+        Z_INDEX_MODAL: 10000,               // Was hardcoded as 10000
+        
+        // Form defaults (replaces hardcoded values in HTML)
+        DEFAULTS: {
+          KNUCKLE_SPAN: 80,                 // value="80" → calibration
+          VELOCITY_MAX_SPEED: 200,          // value="200" → velocity settings
+          EXPRESSION_RANGE: 50,             // value="50" → expression
+          TIMBRE_DEADZONE: 30,              // value="30" → timbre
+          PRESSURE_DEADZONE: 25,            // value="25" → pressure
+          APPROACH_THRESHOLD: 80,           // value="80" → velocity approach
+          PINCH_RELEASE_THRESHOLD: 45,      // value="45" → pinch settings
+          ANCHOR_HOLD_TIME_MS: 300,         // value="300" → spatial anchors
+          RANGE_MIN: 0,                     // min="0" → standard range
+          RANGE_MAX_PERCENTAGE: 100,        // max="100" → percentage ranges
+          MIDI_CHANNEL_DEFAULT: 2,          // value="2" → MIDI channels
+          NOTE_DEFAULT_C3: 48,              // value="48" → C3 default note
+          
+          // Timing options
+          ANCHOR_HOLD_FAST_MS: 200,         // option value="200" → fast timing
+          ANCHOR_HOLD_DELIBERATE_MS: 500,   // option value="500" → deliberate
+          ANCHOR_HOLD_VERY_DELIBERATE_MS: 1000, // option value="1000" → very deliberate
+          
+          // Pinch sensitivity
+          PINCH_TRIGGER_SENSITIVITY: 25,    // value="25" → trigger sensitivity
+          
+          // Range limits
+          MIN_SENSITIVITY: 10,              // min="10" → sensitivity ranges
+          MAX_SENSITIVITY: 50,              // max="50" → sensitivity ranges
+          STEP_SENSITIVITY: 1               // step="1" → sensitivity step
+        }
       }
     }
 
@@ -6993,6 +7095,39 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
     window.TESTING_CONSTANTS = TESTING_CONSTANTS;
     // 🎯 COMPREHENSIVE SYSTEM CONSTANTS - v25.7.15.1400 Magic Number Elimination
     window.SYSTEM_CONSTANTS = SYSTEM_CONSTANTS;
+
+    // 🔄 UI CONSTANTS SYNC - Update HTML form values with constants after loading
+    function syncUIConstantsToHTML() {
+      try {
+        // Update form inputs with actual constants (replacing hardcoded values)
+        const elements = [
+          { id: 'velocityMaxSpeedInput', value: SYSTEM_CONSTANTS.UI.DEFAULTS.VELOCITY_MAX_SPEED },
+          { id: 'expressionRangeInput', value: SYSTEM_CONSTANTS.UI.DEFAULTS.EXPRESSION_RANGE },
+          { id: 'knuckleSpanInputNew', value: SYSTEM_CONSTANTS.UI.DEFAULTS.KNUCKLE_SPAN },
+          { id: 'timbreDeadzone', value: SYSTEM_CONSTANTS.UI.DEFAULTS.TIMBRE_DEADZONE },
+          { id: 'pressureDeadzone', value: SYSTEM_CONSTANTS.UI.DEFAULTS.PRESSURE_DEADZONE },
+          { id: 'velocity-approach-threshold', value: SYSTEM_CONSTANTS.UI.DEFAULTS.APPROACH_THRESHOLD },
+          { id: 'pinch-trigger-sensitivity', value: SYSTEM_CONSTANTS.UI.DEFAULTS.PINCH_TRIGGER_SENSITIVITY },
+          { id: 'pinch-release-threshold', value: SYSTEM_CONSTANTS.UI.DEFAULTS.PINCH_RELEASE_THRESHOLD }
+        ]
+        
+        elements.forEach(({ id, value }) => {
+          const element = document.getElementById(id)
+          if (element && value !== undefined) {
+            element.value = value
+            // Trigger change events to update dependent UI
+            if (element.onchange) element.onchange()
+            if (element.oninput) element.oninput()
+          }
+        })
+        
+        if (typeof Logger !== 'undefined' && Logger.system) {
+          Logger.system('✅ UI constants synced to HTML form elements')
+        }
+      } catch (error) {
+        console.warn('⚠️ Error syncing UI constants:', error.message)
+      }
+    }
 
     /**
      * Master Configuration Object - All system settings in one place
@@ -16511,8 +16646,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         // - 50% engage = Light finger contact triggers pinch (much more natural)
         // - 30% release = Sticky behavior prevents accidental releases (no flicker)
         // - Creates 20% hysteresis gap for stable pinch detection
-        pinchThresholdEngage: 0.5, // OPTIMIZED: More responsive (was 0.7)
-        pinchThresholdRelease: 0.3, // OPTIMIZED: More sticky (was 0.5)
+        pinchThresholdEngage: SYSTEM_CONSTANTS.GESTURE.PINCH_ENGAGE_THRESHOLD, // 0.5 - More responsive
+        pinchThresholdRelease: SYSTEM_CONSTANTS.GESTURE.PINCH_RELEASE_THRESHOLD, // 0.3 - More sticky
         
         // 🎵 VELOCITY DETECTION: Strike and lift velocity for full MPE control
         velocityHistoryFrames: 5,  // Frames to track for velocity calculation
@@ -36730,8 +36865,8 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
        * Demonstrates the FAB flow without real system integration
        */
       
-      // FAB State Management
-      let fabState = 'idle' // idle, starting, loading, ready, hidden
+      // FAB State Management (moved to early declarations)
+      // let fabState = 'idle' // idle, starting, loading, ready, hidden
       
       function fabHandleClick() {
         console.log('🎯 FAB: Button clicked! Current state:', fabState)
@@ -37631,7 +37766,7 @@ cardOrder: ['quickstart', 'controls', 'instruments', 'custom', 'midi', 'mpe', 'a
         
         // Module state
         this.isInitialized = false;
-        this.currentVersion = window.VERSION_INFO?.version || 'v25.7.15.1400';
+        this.currentVersion = window.VERSION_INFO?.version || SYSTEM_CONSTANTS.VERSION.CURRENT;
         this.documentationSections = new Map();
         this.validationRules = new Map();
         this.lastSyncTime = null;
